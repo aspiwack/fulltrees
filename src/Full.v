@@ -160,7 +160,7 @@ Module BL := BinaryList.
 Module PL := PowerList.
 Module APL := AlternatingPowerList.
 
-Definition pass {A n p} : APL.T (FullTree A p) A (S n) -> APL.T (FullTree A (S p)) A n :=
+Definition pass {A n p} : APL.T (FullTree A (S p)) A (S n) -> APL.T (FullTree A (S (S p))) A n :=
   match n with
   | 0 =>    fun l =>
               let '(t,(a,s)) := l in
@@ -180,7 +180,7 @@ Fixpoint plus (n p:nat) : nat :=
   end
 .
 
-Fixpoint balance_powerlist {A n p} : APL.T (FullTree A p) A n -> FullTree A (plus n p) :=
+Fixpoint balance_powerlist {A n p} : APL.T (FullTree A (S p)) A n -> FullTree A (plus n (S p)) :=
   match n with
   | 0 => fun t => t
   | S n => fun l => balance_powerlist (pass l)
