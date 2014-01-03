@@ -1,0 +1,12 @@
+#emacs
+*~
+
+#ocamlbuild
+_build
+
+#coq
+*.glob
+*.vo
+
+#misc
+melt.log
