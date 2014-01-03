@@ -1,0 +1,99 @@
+(* -*- compile-command: "ocamlbuild -classic-display fulltrees.pdf" -*- *)
+
+open Prelude
+open Ocamlmode
+
+
+##plugin coqdoc
+##verbatim '@' = coqdoc
+##verbatim '#' = ocaml_code
+
+(*** doc ***)
+let abstract = "Starting with an algorithm to turn lists into full trees which uses non-obvious invariant and partial functions, we progressively encode the invariants in the types of the data, removing most of the burden of a correctness proof."
+
+let intro = "{section"Introduction"}
+
+We want to turn a list into a full tree, preserving the order of arguments. In particular, a sorted list is turned into a binary search tree.
+"
+
+let algo = "{section"A balancing algorithm"}
+Sample Ocaml code:
+\\
+<#let f x = x+3 in
+  match f 2 with
+  | 3 -> true
+  | false#>
+"
+
+let ocaml = "{section"Removing partial functions"}
+"
+
+let coq = "{section"Turning to Coq"}
+Sample Coq code:
+\\
+<#Fixpoint f (x:nat) : nat :=
+  match x with
+  | 0 => 0
+  | S x' => f x' end#>
+"
+
+let concl = "{section"Conclusion"}
+
+By construction, we build full trees. The only thing left to prove is that the order of elements is preserved. The proof is short and straightforward, if tedious.
+"
+
+let d = concat [
+  intro;
+  algo;
+  ocaml;
+  coq;
+  concl
+]
+
+(*** metadata ***)
+
+open Llncs
+
+let inria = new_institution "Inria Paris-Rocquencourt\\{textsc"Ens"}, 45 rue d'Ulm,
+ 75230 Paris Cedex 05, France"
+let amu = new_institution "Aix-Marseille University"
+
+let title = {
+  title = "Balancing lists: a proof pearl";
+  running_title = Some"Balancing lists"
+}
+
+let authors = [
+  { name = "Guyslain Naves";
+    email = "arnaud@spiwack.net";
+    institution = inria;
+    running_name = None
+  };
+  { name = "Arnaud Spiwack";
+    email = "guyslain.naves@lif.univ-mrs.fr";
+    institution = amu;
+    running_name = None
+  };
+]
+
+let packages = [
+  "inputenc" , "utf8" ;
+  "fontenc" , "T1" ;
+  "textcomp", "";
+  "microtype" , "" ;
+]
+
+let prelude = concat_with_sep [
+  usepackage "hyperref";
+  (* command \"bibliographystyle\" [T,"splncs"] T; *)
+] par
+
+let file = \"fulltrees.tex\"
+
+let _ = emit ~file (document
+                             ~title
+                             ~authors
+                             ~abstract
+                             ~prelude
+                             ~packages
+                             d)
