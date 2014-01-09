@@ -2,6 +2,8 @@ Require Import Coq.Lists.List.
 Import ListNotations.
 
 Notation "⟨ T , x , y ⟩" := (existT T x y).
+Notation "f × g" := (fun xy => let '(x,y) := xy in (f x,g y))
+                      (at level 40, left associativity).
 
 (** Full trees have two constructor for leaves, as they can appear
     either at the lower level or at the level just above. The former
@@ -89,28 +91,24 @@ Module PowerList.
     match n with
     | 0 => fun t => f t
     | S n => fun t =>
-      let f' xy := let '(x,y) := xy in (f x,f y) in
       let '(x,l) := t in
-      ( f x , map f' l )
+      ( f x , map (f×f) l )
     end
   .
 
   Module BL := BinaryList.
 
-  Fixpoint of_blist_pairing_with_cast {A O E} (d:A->E*O) (f:A->O) (g:A->E) (l:BL.T A) : U (E*O) :=
+  Fixpoint of_blist_pairing_with_cast {A X} (d:A->X) (f:A*A->X) (l:BL.T A) : U X :=
     match l with
     | BL.one a => one (d a)
-    | BL.two a b => one (g a , f b)
+    | BL.two a b => one (f (a,b))
     | BL.tpo a l =>
-      let d' xy := let '(x,y) := xy in (d x , d y) in
-      let f' xy := let '(x,y) := xy in (g x , f y) in
-      tpo (d a) (of_blist_pairing_with_cast d' f' f' l)
+      tpo (d a) (of_blist_pairing_with_cast (d×d) (f×f) l)
     | BL.tpt a b l =>
-      let d' xy := let '(x,y) := xy in (d x , d y) in
-      let f' xy := let '(x,y) := xy in (g x , f y) in
-      tpo (g a,f b) (of_blist_pairing_with_cast d' f' f' l)
+      tpo (f (a,b)) (of_blist_pairing_with_cast (d×d) (f×f) l)
     end
   .
+
 
 End PowerList.
 
@@ -139,10 +137,10 @@ Module AlternatingPowerList.
     | BL.two a b => tpo (f a) (PL.one (g b , d))
     | BL.tpo a l =>
       let d' x := ( g x , d ) in
-      tpo (f a) (PL.of_blist_pairing_with_cast d' f g (BL.twice l))
+      tpo (f a) (PL.of_blist_pairing_with_cast d' (g×f) (BL.twice l))
     | BL.tpt a b l  =>
       let d' x := ( g x , d ) in
-      tpo (f a) (PL.of_blist_pairing_with_cast d' f g (BL.tpo b l))
+      tpo (f a) (PL.of_blist_pairing_with_cast d' (g×f) (BL.tpo b l))
     end
   .
 
