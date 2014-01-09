@@ -40,11 +40,14 @@ Ltac destruct_pairs :=
 Ltac prepare_goal :=
   repeat intro; destruct_pairs
 .
+Ltac solving_tactic :=
+  solve [ reflexivity | auto ]
+.
 (* Overrides the "easy" tactic, also overrides the "now" tactical *)
 Ltac easy ::=
   solve [
     prepare_goal;
-    try reflexivity;
+    try solving_tactic;
     simplify_with ltac:(try reflexivity) ltac:(idtac;easy) ltac:(idtac;easy)
   ]
 .
@@ -203,12 +206,11 @@ Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l
     revert A B C f h₁ h₂ l.
     induction n as [ | n' hn ]; intros A B C f h₁ h₂ l p.
     + (* case n=0 *)
-      simpl.
-      apply p.
+      easy.
     + (* case n=S n' *)
       destruct l as [ x l ].
       simplify.
-      now rewrite hn with  (h₁ := h₁+++h₁) (h₂ := (h₂+++h₂)).
+      now rewrite hn with (h₁ := h₁+++h₁).
   Qed.
 
   Definition unit {A} : A->list A := fun x => [x].
@@ -223,7 +225,8 @@ Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l
     + (* case n=S n' *)
       destruct l as [ t [ [ a s ] l ]]; simpl.
       rewrite <-!app_assoc, !app_comm_cons.
-      now rewrite powerlist_map_preserves_order with (h₂ := fun xy => let '(x, y) := xy in x :: list_of_full_tree_n y) (h₁ := fun xy => let '(x, y) := xy in (let '(x0, y0) := x in x0 :: list_of_full_tree_n y0) ++ (let '(x0, y0) := y in x0 :: list_of_full_tree_n y0)).
+      now rewrite powerlist_map_preserves_order with
+         (h₁ := (unit+++list_of_full_tree_n) +++ (unit+++list_of_full_tree_n)).
   Qed.
   Hint Rewrite pass_preserves_order : simplify.
 
