@@ -8,15 +8,31 @@ open Ocamlmode
 ##verbatim '@' = coqdoc
 ##verbatim '#' = ocaml_code
 
+(*** labels ***)
+
+let s_algo = label ()
+let s_ocaml = label ()
+let s_coq = label ()
+
 (*** doc ***)
-let abstract = "Starting with an algorithm to turn lists into full trees which uses non-obvious invariant and partial functions, we progressively encode the invariants in the types of the data, removing most of the burden of a correctness proof."
+let abstract = "Starting with an algorithm to turn lists into full trees which uses non-obvious invariants and partial functions, we progressively encode the invariants in the types of the data, removing most of the burden of a correctness proof."
 
 let intro = "{section"Introduction"}
 
-We want to turn a list into a full tree, preserving the order of arguments. In particular, a sorted list is turned into a binary search tree.
+Starting with a list <#l#>, we want to turn it into a binary tree <#t#> of the following form (in OCaml):
+
+{display"<#type 'a tree =
+  | Node of 'a tree * 'a * 'a tree
+  | Leaf#>"}
+
+With the constraints that <#l#> must be the infix traversal of <#t#> and that <#t#> must be {emph"full"}, in the sense that every level except the last are required to be completely filled. Such a function turns, in particular, sorted list into balanced binary search trees.
+
+There is a number of algorithms to achieve this result in linear time. Here we consider an algorith, presented in Section~{ref_ s_algo}, which repeatedly pairs up trees of height $h$ in a list to form a list of trees of height $h+1$. Our interest in this algorithm sprouts from the fact that its correctness is not obvious; in particular the invariants are complex: the main loop operates on a list of size $2^n-1$ whose elements are full trees whose height is alternatively a given $h$ and $1$.
+
+In Sections~{ref_ s_ocaml} and~{ref_ s_coq} we show refinements of the algorithm where the invariants are pushed into the types, leading to a complete and short proof of correctness in Coq.
 "
 
-let algo = "{section"A balancing algorithm"}
+let algo = "{section"A balancing algorithm" ~label:s_algo}
 Sample Ocaml code:
 \\
 <#let f x = x+3 in
@@ -25,10 +41,10 @@ Sample Ocaml code:
   | false#>
 "
 
-let ocaml = "{section"Removing partial functions"}
+let ocaml = "{section"Removing partial functions" ~label:s_ocaml}
 "
 
-let coq = "{section"Turning to Coq"}
+let coq = "{section"Turning to Coq" ~label:s_coq}
 Sample Coq code:
 \\
 <#Fixpoint f (x:nat) : nat :=

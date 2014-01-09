@@ -16,6 +16,8 @@ val uppi : Latex.t
 val uprho : Latex.t
 val upsigma : Latex.t
 
+val display : Latex.t -> Latex.t
+
 (**** Bibliography ****)
 val cite : ?extra:Latex.t -> Latex.t -> Latex.t
 
