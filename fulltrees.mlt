@@ -72,7 +72,7 @@ Definition list_of_full_tree {A} (t:{ n:nat & FullTree A n }) : list A :=
 We can then state the theorem:
 {display"<@Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l.@>"}
 
-The proof is short and straightforward: we define a traversal function for each intermediate structure and state a variant of <@balance_preserves_order@> for each intermediate function. Proving the intermediate lemmas is not difficult and can be mostly automatised: we use a very simple generic automated tactic, which discharges most goals. This completes our easy formal proof of the balancing algorithm.
+The proof is short and straightforward: we define a traversal function for each intermediate structure and state a variant of <@balance_preserves_order@> for each intermediate function. Proving the intermediate lemmas is not difficult and can be mostly automatised: we use a very simple generic automated tactic, which discharges most goals. This theorem concludes our easy formal proof of the balancing algorithm.
 "
 
 let d = concat [
