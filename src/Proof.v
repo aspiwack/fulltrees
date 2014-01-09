@@ -134,7 +134,7 @@ Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l
   Proof.
     revert B X d f r h.
     induction l as [ | | A x l hl | A x y l hl ]; intros B X d f r h hd hf;
-      [ simpl; rewrite ?hd,?hf; reflexivity .. | | ].
+      [ easy .. | | ].
     + (* case l=tpo x l *)
       simplify.
       now rewrite hl with (h:=h+++h).
