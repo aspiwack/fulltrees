@@ -47,15 +47,32 @@ let ocaml = "{section"Removing partial functions" ~label:s_ocaml}
 let coq = "{section"Turning to Coq" ~label:s_coq}
 Sample Coq code:
 \\
-<#Fixpoint f (x:nat) : nat :=
+<@Fixpoint f (x:nat) : nat :=
   match x with
   | 0 => 0
-  | S x' => f x' end#>
+  | S x' => f x' end@>
 "
 
 let concl = "{section"Conclusion"}
 
-By construction, we build full trees. The only thing left to prove is that the order of elements is preserved. The proof is short and straightforward, if tedious.
+The <@balance@> function of Section~{ref_ s_coq} is, by virtue of its type alone, a total function which turns lists into full binary trees. Yet, to the cost of using intermediary data-structures, it effectively implements the algorithm of Section~{ref_ s_algo}.
+
+The missing piece is to prove that the prefix traversal of <@balance l@> is indeed <@l@>. The prefix traversal of a (full) tree is represented in Coq with the functions
+{display"<@Fixpoint list_of_full_tree_n {A n} (t:FullTree A n) : list A :=
+  match t with
+  | Leaf₀ => []
+  | Leaf₁ => []
+  | Node _ t₁ x t₂ => list_of_full_tree_n t₁ ++ [x] ++ list_of_full_tree_n t₂
+  end
+.
+
+Definition list_of_full_tree {A} (t:{ n:nat & FullTree A n }) : list A :=
+  list_of_full_tree_n (projT2 t)
+.@>"}
+We can then state the theorem:
+{display"<@Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l.@>"}
+
+The proof is short and straightforward: we define a traversal function for each intermediate structure and state a variant of <@balance_preserves_order@> for each intermediate function. Proving the intermediate lemmas is not difficult and can be mostly automatised: we use a very simple generic automated tactic, which discharges most goals. This completes our easy formal proof of the balancing algorithm.
 "
 
 let d = concat [
