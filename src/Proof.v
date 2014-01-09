@@ -22,7 +22,7 @@ Ltac rewrite_hyps main side k :=
   repeat rewrite_one_hyp main side ltac:(rewrite_hyps main side k) k
 .
 Ltac simplk k :=
-  ((progress simpl);first[k|fail 2]) || idtac
+  ((progress simpl in *);first[k|fail 2]) || idtac
 .
 Ltac simplify_with main hyp_side k :=
   first [
@@ -219,8 +219,7 @@ Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l
   Proof.
     destruct n as [ | n' ].
     + (* case n=0 *)
-      destruct l as [ t [ a s ]]; simpl.
-      reflexivity.
+      easy.
     + (* case n=S n' *)
       destruct l as [ t [ [ a s ] l ]]; simpl.
       rewrite <-!app_assoc, !app_comm_cons.
