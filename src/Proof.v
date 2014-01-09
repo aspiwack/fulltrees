@@ -23,16 +23,6 @@ Definition list_of_full_tree {A} (t:{ n:nat & FullTree A n }) : list A :=
 Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l.
 
 
-  (* arnaud: unused? *)
-  Fixpoint list_of_list_of_pairs {A B X} (f:A->list X) (g:B->list X) (l:list (A*B)) : list X :=
-    match l with
-    | (x,y)::l => (f x)++(g y)++(list_of_list_of_pairs f g l)
-    | [] => []
-    end
-  .
-
-  (* arnaud: d'eplacer *)
-  Definition unit {A} : A->list A := fun x => [x].
 
   Fixpoint list_of_binary_list {A B} (f:A->list B) (l:BL.T A) : list B :=
     match l with
@@ -226,6 +216,7 @@ Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l
       easy.
   Qed.
 
+  Definition unit {A} : A->list A := fun x => [x].
 
   Lemma pass_preserves_order A n p (l:APL.T (FullTree A (S p)) A (S n)) :
     list_of_alternating_powerlist_n list_of_full_tree_n unit (pass l) =
