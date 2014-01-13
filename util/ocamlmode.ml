@@ -1,6 +1,24 @@
 open Latex
 open Prelude
 
+let keywords = [
+  "let";
+  "rec";
+  "in";
+  "val";
+  "fun";
+  "type";
+  "and";
+  "match";
+  "try";
+  "with";
+  "module";
+  "struct";
+  "sig";
+  "begin";
+  "end";
+]
+
 let verbatim_code x = texttt (Verbatim.verbatim (Verbatim.trim ['\n'] x))
 
 let verbatim_keywords =
@@ -12,7 +30,7 @@ let ocaml_code_base x =
     ~id_apply: (fun i -> textsf (verbatim_keywords (to_string i)))
     ~kw_apply: (fun x -> textbf (textsf x))
     ~rem_apply: (fun s -> texttt (Latex.Verbatim.verbatim s))
-    ~keywords: ["let"; "in"; "val"; "fun"; "type"; "and";"try";"with"]
+    ~keywords
     ~symbols: ["->", rightarrow]
     ~underscore: (Str.regexp "__")
     x
