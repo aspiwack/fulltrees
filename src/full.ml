@@ -63,26 +63,28 @@ module PowerList = struct
 
 
   (** Given a casting function ['a->'b], we can construct an ['a t]
-      from a non-empty ['a list] of any size, but it requires padding. The
-      idea is to insert a default value [d0:'b] when needed to complete
-      the list to an appropriate length. However, because the recursive
-      step does not allow it, we cannot use a [d0] as the argument for
-      padding, instead, we use a function [d:'a->'b*'b]. At the first step
-      of the recursion, [d] is expected to be of the form [fun a -> (d0,f
-      x)], effectively inserting [d0] in front of the current value. *)
-  let rec of_ne_list : 'a 'b. ('a->'b*'b) -> ('a->'b) -> 'b -> 'a list -> 'b t =
-    fun d f b l ->
-    let cast = function
-      | Odd a -> d a
-      | Even (a,b) -> (f a, f b)
-    in
-    match l with
-    | [] -> One b
-    | a::l ->
-        let d' (x,y) = (d x , d y) in
-        let f' (x,y) = (f x , f y) in
-        let (a',l') = pair_up a l in
-        TwicePlusOne ( b , of_ne_list d' f' (cast a') l' )
+      from a non-empty ['a list] of any size (here represented as an
+      ['a eo] together with an [('a*'a) list], but it requires
+      padding. The idea is to insert a default value [d0:'b] when
+      needed to complete the list to an appropriate length. However,
+      because the recursive step does not allow it, we cannot use a
+      [d0] as the argument for padding, instead, we use a function
+      [d:'a->'b]. At the first step of the recursion, [d] is expected
+      to be of the form [fun a -> (g x,d0)], effectively inserting
+      [d0] after the current value. *)
+  let rec of_ne_list : 'a 'b. ('a->'b) -> ('a*'a->'b) -> 'a eo -> ('a*'a) list -> 'b t =
+    fun d f a l ->
+      let cast = function
+        | Odd x -> d x
+        | Even (x,y) -> f (x,y)
+      in
+      match l with
+      | [] -> One (cast a)
+      | b::l ->
+          let d' (x,y) = (d x , d y) in
+          let f' (x,y) = (f x , f y) in
+          let (b',l') = pair_up b l in
+          TwicePlusOne ( cast a , of_ne_list d' f' b' l' )
 
 end
 
@@ -116,14 +118,8 @@ module AlternatingPowerList = struct
     | a::b::l ->
         let d' x = g x , d in
         let fg (x,y) = g x , f y in
-        let dd (x,y) = d' x , d' y in
         let (b',l') = PowerList.pair_up b l in
-        let b'' =
-          match b' with
-          | PowerList.Odd b -> d' b
-          | PowerList.Even bc -> fg bc
-        in
-        TwicePlusOne ( f a , PowerList.of_ne_list dd fg b'' l')
+        TwicePlusOne ( f a , PowerList.of_ne_list d' fg b' l')
 
 end
 
