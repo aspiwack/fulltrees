@@ -42,6 +42,62 @@ Sample Ocaml code:
 "
 
 let ocaml = "{section"Removing partial functions" ~label:s_ocaml}
+
+(* arnaud: make more precise when the previous section is written and has names for things *)
+(* arnaud: it's not entirely true that the size invariant is preserved during the main loop, it is an invariant of the external "pass" loop, but not the internal "paring" loop, which certainly does not make things easier. *)
+The functions of Section~{ref_ s_algo} rely on the facts that the following invariant hold throughout the main loop: the list has size $2^n-1$ for some $n$ and is non-empty, and all the even position elements (counting from $1$) are singleton trees.
+
+Yet it is not immediately apparent that these properties hold. If it does not take a tremendous effort to convince oneself that the <#balance#> function of Section~{ref_ s_algo} is indeed correct, a direct mechanically checked proof would not be very practical.
+
+{subsection"Size invariants"}
+
+Let us turn to representing non-empty lists of size $2^n-1$. There is a well-known data structure which holds $2^n-1$ values: complete binary trees of height $n$. But given that trees are already what our algorithm builds, it is unlikely that complete binary trees are the appropriate structure for the loop.
+
+Instead, let us consider the following recursive definition of $2^n-1$:
+{displaymath begin just_left `Brace (array [`L;`L;`L] [
+  array_line [$2^1-1$; $=$ ; $1$];
+  array_line [${exponent $2$ $n+1$}-1$; $=$; $2*(2^n-1)+1$];
+]) end}
+We can use these equations to define, recursively, the {exponent $a$ $2^n-1$}:
+{displaymath begin just_left `Brace (array [`L;`L;`L] [
+  array_line [exponent $a$ $2^1-1$; $=$ ; $a$];
+  array_line [exponent $a$ ${exponent $2$ $n+1$}-1$; $=$; $a*{exponent $(a^2)$ $2^n-1$}$];
+]) end}
+These equations, can also be read as a recursive definition of the $2^n-1$-th power of a type <#'a#>, {emph"i.e."} lists of length <#n#>, which we can translate into a (non-uniformly recursive) datatype:
+{display"<#module PowerList = struct
+
+  type 'a t =
+    | One of 'a
+    | TwicePlusOne of 'a * ('a*'a) t
+
+end#>"}
+
+Such a type is in the spirit of Okasaki's {emph"numerical representation"}~{cite"Okasaki1999"}(*arnaud: add relevant chapters*) variants of lists. In fact, this very type appears in~{cite"Okasaki1999"} as an pedagogical introduction to more general purpose types.
+
+Although <#'a PowerList.t#> may look like a type of trees, it is not a very accurate depiction. The easiest way to picture how <#'a PowerList.t#> works is to see <#TwicePlusOne#> as a fancy <#(::)#>, then the lists with, respectively, $1$, $3$, $7$, and $15$ elements are as follows:
+{itemize [
+  "<#[1]#>";
+  "<#[1;(2,3)]#>";
+  "<#[1;(2,3);((4,5),(6,7))]#>";
+  "<#[1;(2,3);((4,5),(6,7));(((8,9),(10,11)),((12,13),(14,15)))]#>";
+ ]}
+Elements appear in order, like in a list, but they are packed twice as tightly after each <#TwicePlueOne#>.
+
+Just like with regular lists, there is a {emph"map"} function for <#'a PowerList.t#>. Due to the non-uniformity it is a little trickier than the regular list map: in the recursive steps, the argument function <#f#> needs to process two consecutive elements at a time.
+{display"<#module PowerList = struct
+
+  #{ldots}#
+
+  let rec map : 'a 'b. ('a->'b) -> 'a t -> 'b t = fun f l ->
+    match l with
+    | One x -> One (f x)
+    | TwicePlusOne (x,l) ->
+        let f' (x,y) = f x , f y in
+        TwicePlusOne ( f x , map f' l)
+
+end#>"}
+
+{subsection"Alternation"}
 "
 
 let coq = "{section"Turning to Coq" ~label:s_coq}
@@ -80,7 +136,8 @@ let d = concat [
   algo;
   ocaml;
   coq;
-  concl
+  concl;
+  command \"bibliography\" [A,"library"] A;
 ]
 
 (*** metadata ***)
@@ -118,7 +175,7 @@ let packages = [
 
 let prelude = concat_with_sep [
   usepackage "hyperref";
-  (* command \"bibliographystyle\" [T,"splncs"] T; *)
+  command \"bibliographystyle\" [T,"splncs"] T;
 ] par
 
 let file = \"fulltrees.tex\"
