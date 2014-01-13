@@ -129,6 +129,37 @@ let rec balance_powerlist = function
       balance_powerlist (pass t l)#>"}
 
 {subsection"Padding"}
+
+There is no partial function in the code of <#balance_powerlist#>, but we have not achieved our goal yet: we want to turn any list into a tree. Like in Section~{ref_ s_algo} we will use an initialisation phase, were we will pad our list with empty trees to reach a length of $2^n-1$. The output of this initialisation will be a <#('a tree,'a) APL.t#>.
+
+The heart of this section is a function which turns a non-empty list of <#'a#> into an <#('a*'a tree) PowerList.t#>. The final function, which produces an <#('a tree,'a) AlternatingPowerList.t#> is a thing wrapper around the former. The idea here is to represent the non-empty list in a way that makes its {emph"parity"} apparent. Such a type is <#('a*'a) list#>: the type of lists of even length. For a general list, there is a loose element (which we choose to be the first) when it has odd length, leading to the type <#'a option * ('a*'a) list#>. But the latter type may contains the empty list, to prevent this, we keep the {emph"two first"} apart when the list has even length, so our type of non-empty lists is <#'a eo * ('a*'a) list#>, where <#'a eo#> is the following type:
+{display"<#type 'a eo =
+    | Odd of 'a
+    | Even of ('a*'a)#>"}
+
+We can fold a non-empty list into a <#'a eo * ('a*'a) list#> with the function <#pair_up 'a -> 'a list -> 'a eo * ('a*'a) list#>:
+{display"<#let rec pair_up hd = function
+    | [] -> Odd hd , []
+    | b::l ->
+        begin match pair_up b l with
+        | Even bc,l' -> Odd hd , bc::l'
+        | Odd b,l' -> Even (hd,b) , l'
+        end#>"}
+
+Finally, abstracting the return type for recursion, we can write:
+{display"<#let rec of_ne_list : 'a 'b. ('a->'b) -> ('a*'a->'b) -> 'a eo -> ('a*'a) list -> 'b t =
+    fun d f a l ->
+      let cast = function
+        | Odd x -> d x
+        | Even (x,y) -> f (x,y)
+      in
+      match l with
+      | [] -> One (cast a)
+      | b::l ->
+          let d' (x,y) = (d x , d y) in
+          let f' (x,y) = (f x , f y) in
+          let (b',l') = pair_up b l in
+          TwicePlusOne ( cast a , of_ne_list d' f' b' l' )#>"}
 "
 
 let coq = "{section"Turning to Coq" ~label:s_coq}
