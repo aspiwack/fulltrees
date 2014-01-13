@@ -70,15 +70,6 @@ module PowerList = struct
         | Odd b,l' -> Even (hd,b) , l'
         end
 
-  (** [pair_up_with_default d a l] returns the same result as [pair_up
-      a l] except that if there is an odd [a], then [d a] is added to
-      the front of the list, otherwise [a,b] is added to the front of
-      the list. Returning a non-empty list. *)
-  let pair_up_with_default d l =
-    match pair_up l with
-    | Odd a , l -> NEList.cons (d a) l
-    | Even ab , l -> NEList.cons ab l
-
 
   (** Given a casting function ['a->'b], we can construct an ['a t]
       from a non-empty ['a list] of any size, but it requires padding. The
