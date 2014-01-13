@@ -20,15 +20,6 @@ type 'a tree =
   | Node of 'a tree * 'a * 'a tree
   | Leaf
 
-module NEList = struct
-
-  (** Non-empty lists *)
-  type 'a t = { hd:'a ; tl:'a list }
-
-  let cons hd tl = { hd ; tl }
-
-end
-
 module PowerList = struct
 
   (** To enforce that a structure has [2^n-1] elements in ocaml's type
@@ -62,10 +53,10 @@ module PowerList = struct
   type 'a eo =
     | Odd of 'a
     | Even of ('a*'a)
-  let rec pair_up = function
-    | { NEList.hd ; tl=[] } -> Odd hd , []
-    | { NEList.hd ; tl= b::l } ->
-        begin match pair_up (NEList.cons b l) with
+  let rec pair_up hd = function
+    | [] -> Odd hd , []
+    | b::l ->
+        begin match pair_up b l with
         | Even bc,l' -> Odd hd , bc::l'
         | Odd b,l' -> Even (hd,b) , l'
         end
@@ -90,7 +81,7 @@ module PowerList = struct
     | a::l ->
         let d' (x,y) = (d x , d y) in
         let f' (x,y) = (f x , f y) in
-        let (a',l') = pair_up (NEList.cons a l) in
+        let (a',l') = pair_up a l in
         TwicePlusOne ( b , of_ne_list d' f' (cast a') l' )
 
 end
@@ -126,7 +117,7 @@ module AlternatingPowerList = struct
         let d' x = g x , d in
         let fg (x,y) = g x , f y in
         let dd (x,y) = d' x , d' y in
-        let (b',l') = PowerList.pair_up (NEList.cons b l) in
+        let (b',l') = PowerList.pair_up b l in
         let b'' =
           match b' with
           | PowerList.Odd b -> d' b
