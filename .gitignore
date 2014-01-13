@@ -4,6 +4,12 @@
 #ocamlbuild
 _build
 
+#ocaml
+*.out
+*.annot
+*.cmi
+*.cmo
+
 #coq
 *.glob
 *.vo
