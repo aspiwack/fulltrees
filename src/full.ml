@@ -170,4 +170,4 @@ let rec balance_powerlist : 'e. ('e tree,'e) APL.t -> 'e tree = function
 
 let singleton x = Node(Leaf,x,Leaf)
 let balance l =
-  balance_powerlist (APL.of_list Leaf (fun o->singleton o) (fun e->e) l)
+  balance_powerlist (APL.of_list Leaf singleton (fun e->e) l)
