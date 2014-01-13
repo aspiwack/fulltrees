@@ -81,25 +81,15 @@ module PowerList = struct
     | Even ab , l -> NEList.cons' ab l
 
 
-  (** We can construct an ['a t] from a non-empty ['a list] of any size, but it
-      requires padding. The idea is to insert a default value between
-      each element of the original list, until there are sufficiently
-      many to complete the tree. One should think of the original [d]
-      to be of the form [fun a -> (x,a)]. *)
-  let rec of_ne_list_with_default : 'a. ('a->'a*'a) -> 'a NEList.t -> 'a t = fun d l ->
-    match l with
-    | { NEList.hd ; tl=[] } -> One hd
-    | { NEList.hd ; tl=b::l } ->
-        let d' (x,y) = (d x,d y) in
-        let l' = NEList.cons' b l in
-        TwicePlusOne ( hd , of_ne_list_with_default d' (pair_up_with_default d l') )
-
-  (** In this variant of {!of_ne_list_with_default}, elements of the
-      list are casted before being introduced in the
-      tree. [of_ne_list_with_cast d f b l] returns the power list starting
-      with [b] and continued with the elements of [List.map f l] with
-      default elements introduced by [d] when needed. *)
-  let rec of_ne_list_with_cast : 'a 'b. ('a->'b*'b) -> ('a->'b) -> 'b -> 'a list -> 'b t =
+  (** Given a casting function ['a->'b], we can construct an ['a t]
+      from a non-empty ['a list] of any size, but it requires padding. The
+      idea is to insert a default value [d0:'b] when needed to complete
+      the list to an appropriate length. However, because the recursive
+      step does not allow it, we cannot use a [d0] as the argument for
+      padding, instead, we use a function [d:'a->'b*'b]. At the first step
+      of the recursion, [d] is expected to be of the form [fun a -> (d0,f
+      x)], effectively inserting [d0] in front of the current value. *)
+  let rec of_ne_list : 'a 'b. ('a->'b*'b) -> ('a->'b) -> 'b -> 'a list -> 'b t =
     fun d f b l ->
     let cast = function
       | Odd a -> d a
@@ -111,7 +101,7 @@ module PowerList = struct
         let d' (x,y) = (d x , d y) in
         let f' (x,y) = (f x , f y) in
         let (a',l') = pair_up (NEList.cons' a l) in
-        TwicePlusOne ( b , of_ne_list_with_cast d' f' (cast a') l' )
+        TwicePlusOne ( b , of_ne_list d' f' (cast a') l' )
 
 end
 
@@ -152,7 +142,7 @@ module AlternatingPowerList = struct
           | PowerList.Odd b -> d' b
           | PowerList.Even bc -> fg bc
         in
-        TwicePlusOne ( f a , PowerList.of_ne_list_with_cast dd fg b'' l')
+        TwicePlusOne ( f a , PowerList.of_ne_list dd fg b'' l')
 
 end
 
