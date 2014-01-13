@@ -27,6 +27,8 @@ let to_greek = function
   | "'e" -> upepsilon
   | "'r" -> uprho
   | "'s" -> upsigma
+  | "'odd" -> upomega
+  | "'even" -> upeta
   | tp -> failwith ("unsupported ocaml type: "^tp)
 
 let ocaml_code x =

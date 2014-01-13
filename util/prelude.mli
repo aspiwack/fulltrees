@@ -15,6 +15,7 @@ val upmu : Latex.t
 val uppi : Latex.t
 val uprho : Latex.t
 val upsigma : Latex.t
+val upomega : Latex.t
 
 val display : Latex.t -> Latex.t
 

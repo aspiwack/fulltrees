@@ -98,6 +98,37 @@ Just like with regular lists, there is a {emph"map"} function for <#'a PowerList
 end#>"}
 
 {subsection"Alternation"}
+
+In Section~{ref_ s_algo}, we encode elements as singleton trees, relying on the <#root#> function to extract the value from the tree. If the invariant that even-position element are actually singleton, <#root#> can fail if the applied to an empty tree, or lose elements if applied to a bigger tree.
+
+In this section, instead, we consider a variant of <#'a PowerList.t#> where every odd position is a tree, and every even position an element. More generally, we define a type <#('odd,'even) AlternatingPowerList.t#> where odd positions have type <#'odd#>, and even positions have type <#'even#>. Such a list should have the following pattern:
+{itemize [
+  "<#['odd;('even,'odd);(('even,'odd),('even,'odd))#>";
+]}
+After the first element, which must have type <#'odd#>, there is no difference between even and <#'odd#> position: indeed, removing the first element, we actually have an <#('even*'odd) PowerList.t#>. Hence the definition:
+{display"<#module AlternatingPowerList = struct
+  type ('odd,'even) t =
+    | One of 'odd
+    | TwicePlusOne of 'odd * ('even*'odd) PowerList.t
+
+end#>"}
+
+We can now define the main loop of our algorithm. The important remark is that in Section~{ref_ s_algo}, the elements are processed four by four: three are joined into a tree, and the last is left as a future root. After two constructors, the elements of an <#('odd,'even) AlternatingPowerList.t#> are grouped by four: an <#('odd,'even) AlternatingPowerList.t#> of length ${exponent $2$ $n+2$}-1$ is -- abusing notations a little -- of the form <#TwicePlusOne a (TwicePlusOne (b,c) l#>, where <#l#> has type <#(('even*'odd)*('even*'odd)) PowerList.t#>. As a consequence, the inner loop is essentially a <#PowerList.map#>.
+
+Writing <#PL#> and <#APL#> for <#PowerList#> and <#AlternatingPowerList#> respectively, we define the function <#pass:'a tree -> ('a*'a tree) PL.t -> ('a tree,'a) APL.t#>, which joins the trees in a list of length ${exponent $2$ $n+1$}-1$ (represented as the two arguments of the <#TwicePlusOne#> constructor), producing a list of length $2^n-1$, and the function <#balance_powerlist:('a tree,'a) APL.t -> 'a tree#> which iterates <#pass#> until there is a single tree left and returns it:
+{display"<#let pass t l =
+    match l with
+    | PL.One (a,s) -> APL.One (Node(t,a,s))
+    | PL.TwicePlusOne((a,s),l) ->
+        APL.TwicePlusOne ( Node(t,a,s) ,
+                           PL.map (fun ((a,t),(b,s)) -> a , Node(t,b,s) ) l )
+
+let rec balance_powerlist = function
+  | APL.One t -> t
+  | APL.TwicePlusOne (t,l) ->
+      balance_powerlist (pass t l)#>"}
+
+{subsection"Padding"}
 "
 
 let coq = "{section"Turning to Coq" ~label:s_coq}

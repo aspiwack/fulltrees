@@ -26,6 +26,7 @@ let upmu = command "upmu" ~packages:["upgreek",""] [] M
 let uppi = command "uppi" ~packages:["upgreek",""] [] M
 let uprho = command "uprho" ~packages:["upgreek",""] [] M
 let upsigma = command "upsigma" ~packages:["upgreek",""] [] M
+let upomega = command "upomega" ~packages:["upgreek",""] [] M
 
 let display x =
   displaymath (parbox (`Linewidth 0.7) x)
