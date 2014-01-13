@@ -25,8 +25,7 @@ module NEList = struct
   (** Non-empty lists *)
   type 'a t = { hd:'a ; tl:'a list }
 
-  let cons' hd tl = { hd ; tl }
-  let cons a { hd ; tl } = cons' a (hd::tl)
+  let cons hd tl = { hd ; tl }
 
 end
 
@@ -66,7 +65,7 @@ module PowerList = struct
   let rec pair_up = function
     | { NEList.hd ; tl=[] } -> Odd hd , []
     | { NEList.hd ; tl= b::l } ->
-        begin match pair_up (NEList.cons' b l) with
+        begin match pair_up (NEList.cons b l) with
         | Even bc,l' -> Odd hd , bc::l'
         | Odd b,l' -> Even (hd,b) , l'
         end
@@ -77,8 +76,8 @@ module PowerList = struct
       the list. Returning a non-empty list. *)
   let pair_up_with_default d l =
     match pair_up l with
-    | Odd a , l -> NEList.cons' (d a) l
-    | Even ab , l -> NEList.cons' ab l
+    | Odd a , l -> NEList.cons (d a) l
+    | Even ab , l -> NEList.cons ab l
 
 
   (** Given a casting function ['a->'b], we can construct an ['a t]
@@ -100,7 +99,7 @@ module PowerList = struct
     | a::l ->
         let d' (x,y) = (d x , d y) in
         let f' (x,y) = (f x , f y) in
-        let (a',l') = pair_up (NEList.cons' a l) in
+        let (a',l') = pair_up (NEList.cons a l) in
         TwicePlusOne ( b , of_ne_list d' f' (cast a') l' )
 
 end
@@ -136,7 +135,7 @@ module AlternatingPowerList = struct
         let d' x = g x , d in
         let fg (x,y) = g x , f y in
         let dd (x,y) = d' x , d' y in
-        let (b',l') = PowerList.pair_up (NEList.cons' b l) in
+        let (b',l') = PowerList.pair_up (NEList.cons b l) in
         let b'' =
           match b' with
           | PowerList.Odd b -> d' b
