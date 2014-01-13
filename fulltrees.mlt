@@ -83,7 +83,7 @@ Although <#'a PowerList.t#> may look like a type of trees, it is not a very accu
  ]}
 Elements appear in order, like in a list, but they are packed twice as tightly after each <#TwicePlueOne#>.
 
-Just like with regular lists, there is a {emph"map"} function for <#'a PowerList.t#>. Due to the non-uniformity it is a little trickier than the regular list map: in the recursive steps, the argument function <#f#> needs to process two consecutive elements at a time.
+Just like with regular lists, there is a {emph"map"} function for <#'a PowerList.t#>. Due to the non-uniformity it is a little trickier{footnote"The type annotation on <#PowerList.map#> informs Ocaml that <#map#> is a non-uniform recursive function. Without the type annotation, Ocaml simply assumes that <#map#> is uniformly recursive and fails to typecheck since <#f#> and <#f'#> have different types."} than the regular list map: in the recursive steps, the argument function <#f#> needs to process two consecutive elements at a time.
 {display"<#module PowerList = struct
 
   #{ldots}#
