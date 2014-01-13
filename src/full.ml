@@ -94,13 +94,6 @@ module PowerList = struct
         let l' = NEList.cons' b l in
         TwicePlusOne ( hd , of_ne_list_with_default d' (pair_up_with_default d l') )
 
-  (** We construct an ['a t] from an ['a list] using
-      {!of_ne_list_with_default} for the non-empty case, and a default
-      value for the empty case. *)
-  let of_list_with_default d = function
-    | [] -> One d
-    | a::l -> of_ne_list_with_default (fun x -> d,x) (NEList.cons' a l)
-
   (** In this variant of {!of_ne_list_with_default}, elements of the
       list are casted before being introduced in the
       tree. [of_ne_list_with_cast d f b l] returns the power list starting
