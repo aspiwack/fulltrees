@@ -169,23 +169,22 @@ module APL = AlternatingPowerList
 
 (** [pass join t l] takes a non-empty alternating power list
     [APL.TwicePlusOne(t,l)], and groups the consecutive triplets using
-    to [join]: the three first elements (of respective types ['o],
+    [Node]: the three first elements (of respective types ['o],
     ['e] and ['o]) are joined, then for each group of four elements
     (of type [('e,'o),('e,'o)]) the first one is kept as such, and the
     three others can be joined. *)
-let pass : 'o 'e. ('o->'e->'o->'o) -> 'o -> ('e*'o) PL.t -> ('o,'e) APL.t =
-  fun join t l ->
+let pass : 'a. 'a tree -> ('a*'a tree) PL.t -> ('a tree,'a) APL.t =
+  fun t l ->
     match l with
-    | PL.One (a,s) -> APL.One (join t a s)
+    | PL.One (a,s) -> APL.One (Node(t,a,s))
     | PL.TwicePlusOne((a,s),l) ->
-        APL.TwicePlusOne ( join t a s ,
-                           PL.map (fun ((a,t),(b,s)) -> a , join t b s ) l )
+        APL.TwicePlusOne ( Node(t,a,s) ,
+                           PL.map (fun ((a,t),(b,s)) -> a , Node(t,b,s) ) l )
 
 let rec balance_powerlist : 'e. ('e tree,'e) APL.t -> 'e tree = function
   | APL.One t -> t
   | APL.TwicePlusOne (t,l) ->
-      let join t a s = Node(t,a,s) in
-      balance_powerlist (pass join t l)
+      balance_powerlist (pass t l)
 
 let singleton x = Node(Leaf,x,Leaf)
 let balance l =
