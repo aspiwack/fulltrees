@@ -194,9 +194,9 @@ The final function, <#balance:'a list -> 'a tree#>, indeed implements the algori
 
 let coq = "{section"Turning to Coq" ~label:s_coq}
 
-There is still a non-obvious property of the algorithm that the implementation of Section~{ref_ s_ocaml} does not make obvious: that the algorithm actually does build full trees. In this section we shall encode this properties into types.
+There is still a non-obvious property of the algorithm that the implementation of Section~{ref_ s_ocaml} does not make obvious: that the algorithm actually does build {emph"full"} trees. In this section we shall build into the type of <@balance@> that its output is indeed full.
 
-To that effect, we will use Coq rather than Ocaml. Even if it is possible, with some effort, to represent full trees and implement the algorithm in Ocaml -- and relatively easy in Haskell -- a Coq implementation also gives us termination by construction. Coq forces every recursion to be structural, we will prove to be rather entertaining.
+To that effect, we will use Coq rather than Ocaml. Even if it is possible, with some effort, to represent full trees and implement the algorithm in Ocaml -- and relatively easy in Haskell -- a Coq implementation also gives us termination by construction. Coq forces every recursion to be structural, will prove to be rather entertaining.
 
 At a superficial level, a visible differences with the Ocaml implementation is that <#Powerlist.t#> and <#AlternatingPowerList.t#> must be decorated with the $n$ such that the length is $2^n-1$: it is the structural recursion parameter of the <@balance_powerlist@> function. Because it makes the code simpler, we will use a recursive definition rather than an inductive one:
 {display"<@Module PowerList.
