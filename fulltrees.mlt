@@ -134,20 +134,24 @@ There is no partial function in the code of <#balance_powerlist#>, but we have n
 
 The heart of this section is a function which turns a non-empty list of <#'a#> into an <#('a*'a tree) PowerList.t#>. The final function, which produces an <#('a tree,'a) AlternatingPowerList.t#> is a thing wrapper around the former. The idea here is to represent the non-empty list in a way that makes its {emph"parity"} apparent. Such a type is <#('a*'a) list#>: the type of lists of even length. For a general list, there is a loose element (which we choose to be the first) when it has odd length, leading to the type <#'a option * ('a*'a) list#>. But the latter type may contains the empty list, to prevent this, we keep the {emph"two first"} apart when the list has even length, so our type of non-empty lists is <#'a eo * ('a*'a) list#>, where <#'a eo#> is the following type:
 {display"<#type 'a eo =
-    | Odd of 'a
-    | Even of ('a*'a)#>"}
+  | Odd of 'a
+  | Even of ('a*'a)#>"}
 
 We can fold a non-empty list into a <#'a eo * ('a*'a) list#> with the function <#pair_up 'a -> 'a list -> 'a eo * ('a*'a) list#>:
 {display"<#let rec pair_up hd = function
-    | [] -> Odd hd , []
-    | b::l ->
-        begin match pair_up b l with
-        | Even bc,l' -> Odd hd , bc::l'
-        | Odd b,l' -> Even (hd,b) , l'
-        end#>"}
+  | [] -> Odd hd , []
+  | b::l ->
+      begin match pair_up b l with
+      | Even bc,l' -> Odd hd , bc::l'
+      | Odd b,l' -> Even (hd,b) , l'
+      end#>"}
 
 Finally, abstracting the return type for recursion, we can write:
-{display"<#let rec of_ne_list : 'a 'b. ('a->'b) -> ('a*'a->'b) -> 'a eo -> ('a*'a) list -> 'b t =
+{display"<#module PowerList = struct
+
+  #{ldots}#
+
+  let rec of_ne_list : 'a 'b. ('a->'b) -> ('a*'a->'b) -> 'a eo -> ('a*'a) list -> 'b t =
     fun d f a l ->
       let cast = function
         | Odd x -> d x
@@ -159,7 +163,31 @@ Finally, abstracting the return type for recursion, we can write:
           let d' (x,y) = (d x , d y) in
           let f' (x,y) = (f x , f y) in
           let (b',l') = pair_up b l in
-          TwicePlusOne ( cast a , of_ne_list d' f' b' l' )#>"}
+          TwicePlusOne ( cast a , of_ne_list d' f' b' l' )
+end#>"}
+Where <#cast#> witnesses that <#d#> and <#f#> together form a function <#'a eo -> 'b#>. We could have used such a function as an argument, but because of the recursive step, it would actually have been more verbose. Notice how every recursive step has a call to <#pair_up#>, to keep up with the non-uniform inductive definition of <#'a PowerList.t#>.
+
+With that function, we can conclude our implementation. Again writing <#PL#> and <#APL#> for <#PowerList#> and <#AlternatingPowerList#> respectively:
+
+{display"<#module AlternatingPowerList = struct
+
+  #{ldots}#
+
+  let of_list d f g = function
+    | [] -> One d
+    | [a] -> One (f a)
+    | a::b::l ->
+        let d' x = g x , d in
+        let fg (x,y) = g x , f y in
+        let (b',l') = PowerList.pair_up b l in
+        TwicePlusOne ( f a , PowerList.of_ne_list d' fg b' l')
+
+end
+
+let singleton x = Node(Leaf,x,Leaf)
+let balance l =
+  balance_powerlist (APL.of_list Leaf singleton (fun e->e) l) #>"}
+The final function, <#balance:'a list -> 'a tree#>, indeed implements the algorithm of Section~{ref_ s_algo} without any partial functions.
 "
 
 let coq = "{section"Turning to Coq" ~label:s_coq}
