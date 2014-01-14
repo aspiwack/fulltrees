@@ -56,5 +56,7 @@ let ocaml_code x =
     Str.regexp "(\\*\\([^*]\\|\\*[^)]\\)*\\*)",
       (fun s -> textit (text s));
     Str.regexp "'[a-z]+",
-       to_greek
+       to_greek;
+    Str.regexp_string "|",
+       (fun _ -> rule_ ~lift:(`Ex (-0.6)) (`Sp 1.) (`Baselineskip 1.));
   ] ocaml_code_base (Melt.Verbatim.trim ['\n'] x)
