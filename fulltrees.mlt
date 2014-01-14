@@ -191,12 +191,136 @@ The final function, <#balance:'a list -> 'a tree#>, indeed implements the algori
 "
 
 let coq = "{section"Turning to Coq" ~label:s_coq}
-Sample Coq code:
-\\
-<@Fixpoint f (x:nat) : nat :=
-  match x with
-  | 0 => 0
-  | S x' => f x' end@>
+
+There is still a non-obvious property of the algorithm that the implementation of Section~{ref_ s_ocaml} does not make obvious: that the algorithm actually does build full trees. In this section we shall encode this properties into types.
+
+To that effect, we will use Coq rather than Ocaml. Even if it is possible, with some effort, to represent full trees and implement the algorithm in Ocaml -- and relatively easy in Haskell -- a Coq implementation also gives us termination by construction. Coq forces every recursion to be structural, we will prove to be rather entertaining.
+
+At a superficial level, a visible differences with the Ocaml implementation is that <#Powerlist.t#> and <#AlternatingPowerList.t#> must be decorated with the $n$ such that the length is $2^n-1$: it is the structural recursion parameter of the <@balance_powerlist@> function. Because it makes the code simpler, we will use a recursive definition rather than an inductive one:
+{display"<@Module PowerList.
+
+  Fixpoint T (A:Type) (n:nat) :=
+    match n with
+    | 0 => A
+    | S n' => (A * T (A*A) n')%type
+    end
+  .
+
+End PowerList.@>"}
+We will also need a version where the height is kept implicit. For that purpose we use Coq's type of dependent pairs <@{ n:nat & F n}@>. The constructor for dependent pairs is written <@⟨ F , n , x ⟩@>. The implicit version comes with constructors -- <@tpo@> stands for ``twice plus one'':
+{display"<@Module PowerList.
+
+  @{ldots}@
+
+  Definition U (A:Type) := { n:nat & T A n }.
+  Definition one {A:Type} (a:A) : U A := ⟨ T A , 0 , a ⟩.
+  Definition tpo {A:Type} (a:A) (l:U (A*A)) : U A :=
+    let '(existT n  l) := l in
+    ⟨ T A , S n , (a,l) ⟩.
+
+End PowerList.@>"}
+The definition of <@AlternatingPowerList.T@> and <@AlternatingPowerList.U@> are similar.
+
+{subsection"Full trees"}
+
+To code full trees, we index trees by their height, and specify that leaves can happen only at height $0$ or $1$:
+{display"<@Inductive FullTree (A:Type) : nat -> Type :=
+  | Leaf₀ : FullTree A 0
+  | Leaf₁ : FullTree A 1
+  | Node {n:nat} : FullTree A n -> A -> FullTree A n -> FullTree A (S n)
+.@>"}
+
+With this modification, the functions <@pass@> and <@balance_powerlist@> are virtually unmodified with respect to Section~{ref_ s_ocaml}. Only their types change to reflect the extra information:
+{display"<@Definition pass {A n p} : APL.T (FullTree A (S p)) A (S n) -> APL.T (FullTree A (S (S p))) A n.
+Fixpoint balance_powerlist {A n p} : APL.T (FullTree A (S p)) A n -> FullTree A (plus n (S p)) {struct n}.@>"}
+The algorithm indeed builds only full trees.
+
+{subsection"Structural initialisation"}
+
+The padding conversion from lists to lists of size $2^n-1$ is not structural, due to the use of <#pair_up#> in the recursive call. We will need another intermediate structure: it must be isomorphic to the type of list, but it must conform with the structure of <@PowerList.of_ne_list@>. That is, we want a datatype such that $"<@'a t@>"="<@'a eo * 'a t@>"$. As it turns out, this is a good definition, and it is a non-uniform datatype which corresponds to a numerical representation.
+
+Indeed, we can write any non-zero natural number in binary with digits $1$ and $2$ (but not $0$). In this system, for example, $8$ is represented as $112$. Here is the definition:
+{display"<@Module BinaryList.
+
+  Inductive T (A:Type) : Type :=
+  | one (a:A)
+  | two (a b:A)
+  | tpo (a:A) (l:T (A*A))
+  | tpt (a b: A) (l:T (A*A))
+  .
+
+End BinaryList.@>"}
+
+To turn a non-empty list into a <@BinaryList.T@>, all we need is a function <@cons:A -> T A -> T A@> to add an element in front of the list. On the numerical representation side, it corresponds to adding $1$. It behaves like adding $1$ in the usual binary representation, except that $1$-s are turned into $2$-s without a carry and $2$-s into $1$-s while producing a carry:
+{display"<@Module BinaryList.
+
+  @{ldots}@
+
+  Fixpoint cons {A} (a:A) (l:T A) : T A :=
+    match l with
+    | one b => two a b
+    | two b c => tpo a (one (b,c))
+    | tpo b l => tpt a b l
+    | tpt b c l => tpo a (cons (b,c) l)
+    end
+  .
+
+End BinaryList.@>"}
+Note that while <@cons@> takes, in the worst case, logarithmic time with respect to the length of the list, building a list by repeatedly using <@cons@> is still linear. (*arnaud: guyslain should help me give a good explanation here. *)
+
+We also need a function which turns a <@T (A*A)@> into a <@T A@>. This is effectively multiplication by $2$. The lack of $0$ among the digit makes this process recursive:
+{displaymath begin just_left `Brace (array [`L;`L;`L] [
+  array_line [$x20$ ; $=$ ; $x12$];
+  array_line [$x10$ ; $=$; $x02$];
+]) end}
+In term of binary lists:
+{display"<@Module BinaryList.
+
+  @{ldots}@
+
+  Fixpoint twice {A} (l:T (A*A)) : T A :=
+    match l with
+    | one (a,b) => two a b
+    | two (a,b) cd => tpt a b (one cd)
+    | tpo (a,b) l => tpt a b (twice l)
+    | tpt (a,b) cd l => tpt a b (tpo cd l)
+    end
+  .
+
+End BinaryList.@>"}
+
+We can now write a structurally recursive <#PowerList.of_ne_list#>, using binary lists as the structural argument. Notice that, as we do not know in advance the size of the produced list, a <@PowerList.U@> is returned:
+{display"<@Module PowerList.
+
+  @{ldots}@
+
+  Fixpoint of_binary_list {A X} (d:A->X) (f:A*A->X) (l:BL.T A) : U X :=
+    match l with
+    | BL.one a => one (d a)
+    | BL.two a b => one (f (a,b))
+    | BL.tpo a l =>
+      tpo (d a) (of_binary_list (d×d) (f×f) l)
+    | BL.tpt a b l =>
+      tpo (f (a,b)) (of_binary_list (d×d) (f×f) l)
+    end
+  .
+
+End PowerList.@>"}
+Where <@g×f@> is the function which maps <@(x,y)@> to <@(g x,f y)@>.
+
+The rest follows straightforwardly, and we can define the following functions which conclude the algorithm (<@BL@>, <@PL@>, and <@APL@> stand for <@BinaryList@>, <@PowerList@>, and <@AlternatingPowerList@> respectively):
+{display"<@Module AlternatingPowerList.
+
+  @{ldots}@
+
+  Definition of_binary_list {A Odd Even} (d:Odd) (f:A->Odd) (g:A->Even) (l:BL.T A) : U Odd Even.
+
+  Definition of_list {A Odd Even} (d:Odd) (f:A->Odd) (g:A->Even) (l:list A) : U Odd Even.
+
+End AlternatingPowerList.
+
+
+Definition balance {A:Type} (l:list A) : { n:nat & FullTree A n }.@>"}
 "
 
 let concl = "{section"Conclusion"}

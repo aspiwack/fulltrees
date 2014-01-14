@@ -23,6 +23,7 @@ let keywords = [
   "with" ;
   "end";
 
+  "Module";
   "Section";
   "Variable";
   "Variables";
@@ -76,6 +77,9 @@ let symbols = [
   "₀" , mode M(text"_0") ;
   "₁" , mode M(text"_1") ;
   "₂" , mode M(text"_2") ;
+  "⟨" , langle;
+  "⟩" , rangle;
+  "×" , times ;
 
   "--" , mode T (text"--") ;
 ]
