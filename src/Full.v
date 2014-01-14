@@ -98,14 +98,14 @@ Module PowerList.
 
   Module BL := BinaryList.
 
-  Fixpoint of_blist_pairing_with_cast {A X} (d:A->X) (f:A*A->X) (l:BL.T A) : U X :=
+  Fixpoint of_binary_list {A X} (d:A->X) (f:A*A->X) (l:BL.T A) : U X :=
     match l with
     | BL.one a => one (d a)
     | BL.two a b => one (f (a,b))
     | BL.tpo a l =>
-      tpo (d a) (of_blist_pairing_with_cast (d×d) (f×f) l)
+      tpo (d a) (of_binary_list (d×d) (f×f) l)
     | BL.tpt a b l =>
-      tpo (f (a,b)) (of_blist_pairing_with_cast (d×d) (f×f) l)
+      tpo (f (a,b)) (of_binary_list (d×d) (f×f) l)
     end
   .
 
@@ -137,10 +137,10 @@ Module AlternatingPowerList.
     | BL.two a b => tpo (f a) (PL.one (g b , d))
     | BL.tpo a l =>
       let d' x := ( g x , d ) in
-      tpo (f a) (PL.of_blist_pairing_with_cast d' (g×f) (BL.twice l))
+      tpo (f a) (PL.of_binary_list d' (g×f) (BL.twice l))
     | BL.tpt a b l  =>
       let d' x := ( g x , d ) in
-      tpo (f a) (PL.of_blist_pairing_with_cast d' (g×f) (BL.tpo b l))
+      tpo (f a) (PL.of_binary_list d' (g×f) (BL.tpo b l))
     end
   .
 
