@@ -273,7 +273,7 @@ We also need a function which turns a <@T (A*A)@> into a <@T A@>. This is effect
   array_line [$x20$ ; $=$ ; $x12$];
   array_line [$x10$ ; $=$; $x02$];
 ]) end}
-In term of binary lists:
+In terms of binary lists:
 {display"<@Module BinaryList.
 
   @{ldots}@
