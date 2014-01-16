@@ -74,7 +74,7 @@ These equations, can also be read as a recursive definition of the $2^n-1$-th po
 
 end#>"}
 
-Such a type is in the spirit of Okasaki's {emph"numerical representation"}~{cite"Okasaki1999"}(*arnaud: add relevant chapters*) variants of lists. In fact, this very type appears in~{cite"Okasaki1999"} as an pedagogical introduction to more general purpose types.
+Such a type is in the spirit of Okasaki's {emph"numerical representation"}~{cite"Okasaki1999"}(*arnaud: add relevant chapters*) variants of lists. In fact, this very type appears in~{cite"Okasaki1999"} as a pedagogical introduction to more general purpose types.
 
 Although <#'a PowerList.t#> may look like a type of trees, it is not a very accurate depiction. The easiest way to picture how <#'a PowerList.t#> works is to see <#TwicePlusOne#> as a fancy <#(::)#>, then the lists with, respectively, $1$, $3$, $7$, and $15$ elements are as follows:
 {itemize [
@@ -196,9 +196,9 @@ let coq = "{section"Turning to Coq" ~label:s_coq}
 
 There is still a non-obvious property of the algorithm that the implementation of Section~{ref_ s_ocaml} does not make obvious: that the algorithm actually does build {emph"full"} trees. In this section we shall build into the type of <@balance@> that its output is indeed full.
 
-To that effect, we will use Coq rather than Ocaml. Even if it is possible, with some effort, to represent full trees and implement the algorithm in Ocaml -- and relatively easy in Haskell -- a Coq implementation also gives us termination by construction. Coq forces every recursion to be structural, will prove to be rather entertaining.
+To that effect, we will use Coq rather than Ocaml. Even if it is possible, with some effort, to represent full trees and implement the algorithm in Ocaml -- and relatively easy in Haskell -- a Coq implementation also gives us termination by construction. Coq forces every recursion to be structural, which will prove to be rather entertaining.
 
-At a superficial level, a visible differences with the Ocaml implementation is that <#Powerlist.t#> and <#AlternatingPowerList.t#> must be decorated with the $n$ such that the length is $2^n-1$: it is the structural recursion parameter of the <@balance_powerlist@> function. Because it makes the code simpler, we will use a recursive definition rather than an inductive one:
+At a superficial level, a visible difference with the Ocaml implementation is that <#Powerlist.t#> and <#AlternatingPowerList.t#> must be decorated with the $n$ such that the length is $2^n-1$: it is the structural recursion parameter of the <@balance_powerlist@> function. Because it makes the code simpler, we will use a recursive definition rather than an inductive one:
 {display"<@Module PowerList.
 
   Fixpoint T (A:Type) (n:nat) :=
@@ -270,7 +270,7 @@ To turn a non-empty list into a <@BinaryList.T@>, all we need is a function <@co
 End BinaryList.@>"}
 Note that while <@cons@> takes, in the worst case, logarithmic time with respect to the length of the list, building a list by repeatedly using <@cons@> is still linear. (*arnaud: guyslain should help me give a good explanation here. *)
 
-We also need a function which turns a <@T (A*A)@> into a <@T A@>. This is effectively multiplication by $2$. The lack of $0$ among the digit makes this process recursive:
+We also need a function which turns a <@T (A*A)@> into a <@T A@>. This is effectively multiplication by $2$. The lack of $0$ among the digits makes this process recursive:
 {displaymath begin just_left `Brace (array [`L;`L;`L] [
   array_line [$x20$ ; $=$ ; $x12$];
   array_line [$x10$ ; $=$; $x02$];
@@ -329,7 +329,7 @@ let concl = "{section"Conclusion"}
 
 The <@balance@> function of Section~{ref_ s_coq} is, by virtue of its type alone, a total function which turns lists into full binary trees. Yet, to the cost of using intermediary data-structures, it effectively implements the algorithm of Section~{ref_ s_algo}.
 
-The missing piece is to prove that the prefix traversal of <@balance l@> is indeed <@l@>. The prefix traversal of a (full) tree is represented in Coq with the functions
+The missing piece is to prove that the infix traversal of <@balance l@> is indeed <@l@>. The infix traversal of a (full) tree is represented in Coq with the functions
 {display"<@Fixpoint list_of_full_tree_n {A n} (t:FullTree A n) : list A :=
   match t with
   | Leaf₀ => []
