@@ -54,7 +54,7 @@ let symbols = [
   "{" , text"\\{" ;
   "}" , text"\\}" ;
   "!" , cdot ;
-  "|" , rule_ ~lift:(`Ex (-0.6)) (`Sp 1.) (`Baselineskip 1.) ;
+  "|" , hspace (`Em 0.1)^^rule_ ~lift:(`Ex (-0.6)) (`Sp 1.) (`Baselineskip 1.) ;
   "~0", mode M(sim^^text"0") ;
   "~1", mode M(sim^^text"1") ;
   "~" , lnot ;
