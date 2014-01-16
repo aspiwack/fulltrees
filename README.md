@@ -4,7 +4,9 @@ Balancing lists: a proof pearl
 Abstract
 --------
 
-Starting with an algorithm to turn lists into full trees which uses non-obvious invariant and partial functions, we progressively encode the invariants in the types of the data, removing most of the burden of a correctness proof.
+Starting with an algorithm to turn lists into full trees which uses non-obvious invariants and partial functions, we progressively encode the invariants in the types of the data, removing most of the burden of a correctness proof.
+
+The encodings make use of numerical representations, in a style first proposed by Okasaki, and a small amount of dependent types.
 
 
 Files
