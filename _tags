@@ -1,8 +1,8 @@
 true: use_menhir
 <util>: include
 
-<**/*.ml> or <**/*.mli> or <**/*.mly> : use_unix , use_str , package(mlpost,dynlink,melt.latex,melt,bitstring,cairo,ulex,menhirLib)
-<**/*.native> or <**/*.byte>: package(mlpost,dynlink,melt.latex,melt,bitstring,cairo,ulex,menhirLib)
+<**/*.ml> or <**/*.mli> or <**/*.mly> : use_unix , use_str , package(mlpost,dynlink,melt.latex,melt,bitstring,cairo,ulex)
+<**/*.native> or <**/*.byte>: package(mlpost,dynlink,melt.latex,melt,bitstring,cairo,ulex)
 <**/*.mly> : use_mlpost, use_melt
 
 <util/coqdoc.cmxs>: linkall
