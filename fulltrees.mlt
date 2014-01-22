@@ -17,7 +17,7 @@ let s_coq = label ()
 (*** doc ***)
 let abstract = "Starting with an algorithm to turn lists into full trees which uses non-obvious invariants and partial functions, we progressively encode the invariants in the types of the data, removing most of the burden of a correctness proof.
 
-The encodings make use of numerical representations, in a style first proposed by Okasaki, and a small amount of dependent types."
+The invariants are encoded using non-uniform inductive types which parallel numerical representations in a style first proposed by Okasaki, and a small amount of dependent types."
 
 let intro = "{section"Introduction"}
 
