@@ -19,6 +19,8 @@ val upomega : Latex.t
 
 val display : Latex.t -> Latex.t
 
+val module_elipsis : Latex.t
+
 (**** Bibliography ****)
 val cite : ?extra:Latex.t -> Latex.t -> Latex.t
 

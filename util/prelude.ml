@@ -31,6 +31,9 @@ let upomega = command "upomega" ~packages:["upgreek",""] [] M
 let display x =
   displaymath (parbox (`Linewidth 0.7) x)
 
+let vdots = command "vdots" [] A
+let module_elipsis = hspace (`Em 2.5) ^^ vdots
+
 (**** Bibliography ****)
 let cite ?extra t =
   let opt =
