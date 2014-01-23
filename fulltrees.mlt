@@ -63,9 +63,9 @@ Instead, let us consider the following recursive definition of $2^n-1$:
 Which is just a fancy way of saying that the $2^n-1$ are precisely those number which are written only with $1$-s in binary representation. In general, given a reasonable representation of (a subset of) the natural numbers, a corresponding structurally recursive definition of exponential can be deduced:
 {displaymath begin just_left `Brace (array [`L;`L;`L] [
   array_line [exponent $a$ $2^1-1$; $=$ ; $a$];
-  array_line [exponent $a$ ${exponent $2$ $n+1$}-1$; $=$; $a*{exponent $(a^2)$ $2^n-1$}$];
+  array_line [exponent $a$ ${exponent $2$ $n+1$}-1$; $=$; $a{times}{exponent $(a^2)$ $2^n-1$}$];
 ]) end}
-If $a$ is read as a type, then $a^n$, is nothing but the type of lists of length $n$ filled with elements of $a$. Depending on the algorithm used to compute the exponential, one gets a different flavour of list. The standard linked lists correspond to the naïve algorithm ${exponent $a$ $n+1$}=a*a^n$, which is associated with the unary representation of numbers. Using the algorithm above, we restrict the lists to have size $2^n$ and the shape is more unusual. Generalising to an arbitrary $n$, we obtain the (non-uniformly recursive) datatype, which we shall call {emph"power lists"}:
+If $a$ is read as a type, then $a^n$, is nothing but the type of lists of length $n$ filled with elements of $a$. Depending on the algorithm used to compute the exponential, one gets a different flavour of list. The standard linked lists correspond to the naïve algorithm ${exponent $a$ $n+1$}=a{times}a^n$, which is associated with the unary representation of numbers. Using the algorithm above, we restrict the lists to have size $2^n$ and the shape is more unusual. Generalising to an arbitrary $n$, we obtain the (non-uniformly recursive) datatype, which we shall call {emph"power lists"}:
 {display"<#module PowerList = struct
 
   type 'a t =
