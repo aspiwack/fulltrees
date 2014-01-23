@@ -29,19 +29,58 @@ Starting with a list <#l#>, we want to turn it into a binary tree <#t#> of the f
 
 With the constraints that <#l#> must be the infix traversal of <#t#> and that <#t#> must be {emph"full"}, in the sense that every level except the last are required to be completely filled. Such a function turns, in particular, sorted list into balanced binary search trees.
 
-There is a number of algorithms to achieve this result in linear time. Here we consider an algorithm, presented in Section~{ref_ s_algo}, which repeatedly pairs up trees of height $h$ in a list to form a list of trees of height $h+1$. Our interest in this algorithm sprouts from the fact that its correctness is not obvious; in particular the invariants are complex: the main loop operates on a list of size $2^n-1$ whose elements are full trees whose height is alternatively a given $h$ and $1$.
+There is a number of algorithms to achieve this result in linear time. Here we consider an algorithm, presented in Section~{ref_ s_algo}, which repeatedly pairs up trees of height $h$ in a list to form a list of trees of height $h+1$. Our interest in this algorithm sprouts from the fact that its correctness is not obvious; in particular the invariants are complex: the main loop operates on a list of size $2^k-1$ whose elements are full trees whose height is alternatively a given $h$ and $1$.
 
 In Sections~{ref_ s_ocaml} and~{ref_ s_coq} we show refinements of the algorithm where the invariants are pushed into the types, leading to a complete and short proof of correctness in Coq.
 "
 
 let algo = "{section"A balancing algorithm" ~label:s_algo}
-Sample Ocaml code:
-\\
-<#let f x = x+3 in
-  match f 2 with
-  | 3 -> true
-  | false#>
+
+We start by giving a first, almost naive, implementation of the balancing algorithm. The heart of the algorithm relies on using an alternating list of length ${exponent $2$ $k$}-1$, where odd-position elements are trees and even-position elements are labels, of type <#'a#>. Though we could encode labels as trees of height one, we rather use an appropriate type for sake of readability:
+
+{display"<#type 'a tree_or_elt =
+| Elt of 'a
+| Tree of 'a tree#>"}
+
+We decompose the problem into two parts: computing an alternating list of length ${exponent $2$ $k$} - 1$ from an arbitrary list of labels, and then transforming this alternating list into a balanced tree. We first show how to solve the second part.
+
+Given an alternating list <#lst#>, by pairing the trees in <#lst#> using only one traversal of the list, we obtain an alternating list with exactly half as many trees. Each pairing requires two trees and one label used as a root. In order to keep the lists alternating, we also need a second label, that is kept as a single element. This explains why we consider at each step the four first elements of the list.
+
+A single traversal, encoded by <#pass: 'a tree_or_elt list -> 'a tree_or_elt_list#>, reduces an alternating list of length ${exponent $2$ $k$} - 1 {geqslant} 3$ to an alternating list of length ${exponent $2$ $k-1$} -1$. Also the height of trees is increased by one in the new list. By iterating this process using <#loop: 'a tree_or_elt list -> 'a tree#>, we reduce the original list to a list of size one, whose element is a balanced tree containing all the labels of the first tree. 
+
+{display"<#let join left node right = Tree (Node (left, node, right))
+
+let rec pass list = match  list with
+  | Tree left :: Elt root :: Tree right :: Elt e :: others -> join left root right :: Elt e :: pass others
+  | [Tree left; Elt root; Tree right] -> [join left root right]
+  | _ -> assert false
+
+let rec loop list = match list with
+  | [] -> Leaf
+  | [Tree t] -> t
+  | list -> loop (pass list)
+#>"}
+
+It remains to show how to transform a list of labels of length $n$ into an alternating list of trees and labels. Each of the original tree has depth zero or one: they are leaves or contain only one label. Because we want a list of length precisely $2^k -1$, for $k = 1 + {index log $2$} n$, it means we need $2^k - 1 - n$ leaves. This quantity is computed as the variable <#missing#>. The function <#pad#> computes the alternating list by creating as many leaves as needed, alternating them with elements, and once enough leaves are created, promotes all the odd-position labels into trees.
+
+{display"<#let complete list =
+  let n = List.length list in
+  let rec pow2 i = if i <= n then pow2 (2*i) else i in 
+  let missing = (pow2 1) - n - 1 in
+  let rec pad missing = function
+    | head::tail when missing <> 0 -> Tree Leaf :: Elt head :: pad (missing - 1) tail
+    | one::two::others -> join Leaf one Leaf :: Elt two :: pad 0 others
+    | [single] -> [join Leaf single Leaf]
+    | [] -> []
+  in
+  pad missing list
+#>"}
+
+The balancing algorithm <#balance: 'a list -> 'a tree #> is thus given by:
+{display"<#let balance list = loop (complete  list)#>"}
 "
+
+
 
 let ocaml = "{section"Removing partial functions" ~label:s_ocaml}
 
