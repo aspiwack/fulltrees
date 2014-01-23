@@ -76,9 +76,6 @@ end#>"}
 
 The correspondence between flavours of lists and numerical representation goes back to Guibas \& al. in~{cite"Guibas1977"} and is pushed further by Myers in~{cite"Myers1983"}. A thorough exploration of the correspondence, is conducted by Okasaki in~{cite"Okasaki1999"}(*arnaud: add relevant chapters*) where he introduces the idea of using non-uniform inductive datatypes in the context of numerical representations. As a matter of fact, the type of power lists actually appears in~{cite"Okasaki1999"} as a pedagogical introduction to non-uniformly recursive lists. Relatedly, Okasasi uses, in~{cite"Okasaki1999a"}, a non-uniform recursive datatype to devise a type containing only square matrices, it is also based on numerical representations but uses a tail-recursive exponentiation.
 
-With numerical representations which cover the whole set of natural numbers, we obtain lists with unusual shapes but which can have any number of elements. We will return to these in Section~{ref_ s_coq}.
-
-
 Although the power lists may look like some sort of trees, it is not a very accurate depiction. The easiest way to picture how power lists works is to see <#TwicePlusOne#> as a fancy <#(::)#>, then the lists with, respectively, $1$, $3$, $7$, and $15$ elements are as follows:
 {itemize [
   "<#[1]#>";
