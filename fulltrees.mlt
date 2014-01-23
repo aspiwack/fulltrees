@@ -29,7 +29,7 @@ Starting with a list <#l#>, we want to turn it into a binary tree <#t#> of the f
 
 With the constraints that <#l#> must be the infix traversal of <#t#> and that <#t#> must be {emph"full"}, in the sense that every level except the last are required to be completely filled. Such a function turns, in particular, sorted list into balanced binary search trees.
 
-There is a number of algorithms to achieve this result in linear time. Here we consider an algorithm, presented in Section~{ref_ s_algo}, which repeatedly pairs up trees of height $h$ in a list to form a list of trees of height $h+1$. Our interest in this algorithm sprouts from the fact that its correctness is not obvious; in particular the invariants are complex: the main loop operates on a list of size $2^k-1$ whose elements are full trees whose height is alternatively a given $h$ and $1$.
+There are a number of algorithms to achieve this result in linear time. Here we consider an algorithm, presented in Section~{ref_ s_algo}, which repeatedly pairs up trees of height $h$ in a list to form a list of trees of height $h+1$. Our interest in this algorithm sprouts from the fact that its correctness is not obvious; in particular the invariants are complex: the main loop operates on a list of size $2^k-1$ whose elements are alternately of two distinct forms.
 
 In Sections~{ref_ s_ocaml} and~{ref_ s_coq} we show refinements of the algorithm where the invariants are pushed into the types, leading to a complete and short proof of correctness in Coq.
 "
@@ -46,7 +46,7 @@ We decompose the problem into two parts: computing an alternating list of length
 
 Given an alternating list <#lst#>, by pairing the trees in <#lst#> using only one traversal of the list, we obtain an alternating list with exactly half as many trees. Each pairing requires two trees and one label used as a root. In order to build a list that is alternated, we also need a second label, that is kept as a single element. This explains why we consider at each step the four first elements of the list.
 
-A single traversal, encoded by <#pass: 'a tree_or_elt list -> 'a tree_or_elt_list#>, reduces an alternating list of length ${exponent $2$ $k$} - 1 {geqslant} 3$ to an alternating list of length ${exponent $2$ $k-1$} -1$. Also the height of trees is increased by one in the new list. By iterating this process using <#loop: 'a tree_or_elt list -> 'a tree#>, we reduce the original list to a list of size one, whose element is a balanced tree containing all the labels of the first tree. 
+A single traversal, encoded by <#pass : 'a tree_or_elt list -> 'a tree_or_elt_list#>, reduces an alternating list of length ${exponent $2$ $k$} - 1 {geqslant} 3$ to an alternating list of length ${exponent $2$ $k-1$} -1$. Also the height of trees is increased by one in the new list. By iterating this process using <#loop : 'a tree_or_elt list -> 'a tree#>, we reduce the original list to a list of size one, whose element is a balanced tree containing all the labels of the first tree. 
 
 {display"<#let join left node right = Tree (Node (left, node, right))
 
