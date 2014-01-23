@@ -42,11 +42,11 @@ We start by giving a first, almost naive, implementation of the balancing algori
 | Elt of 'a
 | Tree of 'a tree#>"}
 
-We decompose the problem into two parts: computing an alternating list of length ${exponent $2$ $k$} - 1$ from an arbitrary list of labels, and then transforming this alternating list into a balanced tree. A full tree can be decomposed into the first $k-1$ levels, containing ${exponent $2$ $k-1$} -1$ internal nodes, and the $k$th level, which contains nodes or leaves. Thus, the ${exponent $2$ $k-1$} - 1$ labels will be used to label the internal nodes in the $k-1$ first levels of the balanced tree, while the ${exponent $2$ $k-1$}$ trees, all of height at most one, will be pending at the last level. We first show how to solve the second part: turning an alternating list into a full tree.
+We decompose the problem into two parts: computing an alternating list of length ${exponent $2$ $k$} - 1$ from an arbitrary list of labels, and then transforming this alternating list into a balanced tree. A full tree can be decomposed into the first $k-1$ levels, containing ${exponent $2$ $k-1$} -1$ internal nodes, and the $k$th level, which contains nodes or leaves. Thus, the ${exponent $2$ $k-1$} - 1$ labels in the alternating list will be used to label the internal nodes in the $k-1$ first levels of the balanced tree, while the ${exponent $2$ $k-1$}$ trees, all of height at most one, will be pending at the last level. We first show how to solve the second part: turning an alternating list into a full tree.
 
 Given an alternating list <#lst#>, by pairing the trees in <#lst#> using only one traversal of the list, we obtain an alternating list with exactly half as many trees. Each pairing requires two trees and one label used as a root. In order to build a list that is alternated, we also need a second label, that is kept as a single element. This explains why we consider at each step the four first elements of the list.
 
-A single traversal, encoded by <#pass : 'a tree_or_elt list -> 'a tree_or_elt_list#>, reduces an alternating list of length ${exponent $2$ $k$} - 1 {geqslant} 3$ to an alternating list of length ${exponent $2$ $k-1$} -1$. Also the height of trees is increased by one in the new list. By iterating this process using <#loop : 'a tree_or_elt list -> 'a tree#>, we reduce the original list to a list of size one, whose element is a balanced tree containing all the labels of the first tree. 
+A single traversal, encoded by <#pass : 'a tree_or_elt list -> 'a tree_or_elt_list#>, reduces an alternating list of length ${exponent $2$ $k$} - 1 {geqslant} 3$ to an alternating list of length ${exponent $2$ $k-1$} -1$. By iterating this process using <#loop : 'a tree_or_elt list -> 'a tree#>, we reduce the original list to a list of size one, whose element is a balanced tree containing all the labels of the first tree. 
 
 {display"<#let join left node right = Tree (Node (left, node, right))
 
@@ -62,7 +62,7 @@ let rec loop list = match list with
   | list -> loop (pass list)
 #>"}
 
-Notice how the invariant that alternating lists have length $2^k-1$ is maintained : this is because, for $k {geqslant} 2$, we have $2^k - 1 = 4 {times} ({exponent $2$ $k-2$} - 1) + 3$, hence we obtain an alternating list of length $2 {times} ({exponent $2$ $k-2$} - 1) + 1 = {exponent $2$ $k-1$} - 1$.
+Notice how the invariant that alternating lists have length $2^k-1$ is maintained: this is because, for $k {geqslant} 2$, we have $2^k - 1 = 4 {times} ({exponent $2$ $k-2$} - 1) + 3$, hence we obtain an alternating list of length $2 {times} ({exponent $2$ $k-2$} - 1) + 1 = {exponent $2$ $k-1$} - 1$.
 
 It remains to show how to transform a list of labels of length $n$ into an alternating list of trees and labels. Each of the original tree has height zero or one: they are leaves or contain only one label. Because we want a list of length precisely $2^k -1$, for $k = 1 + {index log_ $2$} n$, it means we need $2^k - 1 - n$ leaves. This quantity is computed as the variable <#missing#>. The function <#pad#> computes the alternating list by creating as many leaves as needed, alternating them with elements, and once enough leaves are created, promotes all the odd-position labels into trees.
 
