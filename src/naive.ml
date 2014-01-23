@@ -13,10 +13,10 @@ let rec pass list = match  list with
   | [Tree left; Elt root; Tree right] -> [join left root right]
   | _ -> assert false
 
-let rec balance list = match list with
+let rec loop list = match list with
   | [] -> Leaf
   | [Tree t] -> t
-  | list -> balance (pass list)
+  | list -> loop (pass list)
 
 let complete list =
   let n = List.length list in
@@ -30,4 +30,4 @@ let complete list =
   in
   pad missing list
 
-let rebuild list = balance (complete  list)
+let balance list = loop (complete  list)
