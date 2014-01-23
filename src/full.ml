@@ -34,13 +34,13 @@ module PowerList = struct
       [((d,e),(f,g))]: [d] is the fourth element, [e] the fifth, [f]
       the sixth, and [g] the seventh. And so on. *)
   type 'a t =
-    | One of 'a
+    | Zero
     | TwicePlusOne of 'a * ('a*'a) t
 
   (** [map f l] is the functorial action of [f] on the powerlist [l]. *)
   let rec map : 'a 'b. ('a->'b) -> 'a t -> 'b t = fun f l ->
     match l with
-    | One x -> One (f x)
+    | Zero -> Zero
     | TwicePlusOne (x,l) ->
         let f' (x,y) = f x , f y in
         TwicePlusOne ( f x , map f' l)
@@ -50,15 +50,17 @@ module PowerList = struct
       elements of [l] paired up, otherwise [Odd a,l'] where [l'] is
       the (possibly empty) list of consecutive elements of [l.tl]
       paired up. *)
-  type 'a eo =
-    | Odd of 'a
-    | Even of ('a*'a)
-  let rec pair_up hd = function
-    | [] -> Odd hd , []
-    | b::l ->
-        begin match pair_up b l with
-        | Even bc,l' -> Odd hd , bc::l'
-        | Odd b,l' -> Even (hd,b) , l'
+  type 'a parity =
+    | Empty
+    | Odd of 'a * ('a*'a) list
+    | Even of ('a*'a) * ('a*'a) list
+  let rec pair_up = function
+    | [] -> Empty
+    | a::l ->
+        begin match pair_up l with
+        | Empty -> Odd (a , [])
+        | Odd (b,l') -> Even ((a,b) , l')
+        | Even (bc,l') -> Odd (a , bc::l')
         end
 
 
@@ -72,19 +74,14 @@ module PowerList = struct
       [d:'a->'b]. At the first step of the recursion, [d] is expected
       to be of the form [fun a -> (g x,d0)], effectively inserting
       [d0] after the current value. *)
-  let rec of_ne_list : 'a 'b. ('a->'b) -> ('a*'a->'b) -> 'a eo -> ('a*'a) list -> 'b t =
-    fun d f a l ->
-      let cast = function
-        | Odd x -> d x
-        | Even (x,y) -> f (x,y)
-      in
-      match l with
-      | [] -> One (cast a)
-      | b::l ->
-          let d' (x,y) = (d x , d y) in
-          let f' (x,y) = (f x , f y) in
-          let (b',l') = pair_up b l in
-          TwicePlusOne ( cast a , of_ne_list d' f' b' l' )
+  let rec of_list : 'a 'b. ('a->'b) -> ('a*'a->'b) -> 'a list -> 'b t =
+    fun d f l ->
+      let d' (x,y) = (d x , d y) in
+      let f' (x,y) = (f x , f y) in
+      match pair_up l with
+      | Empty -> Zero
+      | Odd  (a ,l') -> TwicePlusOne ( d a  , of_list d' f' l' )
+      | Even (ab,l') -> TwicePlusOne ( f ab , of_list d' f' l' )
 
 end
 
@@ -105,7 +102,7 @@ module AlternatingPowerList = struct
       no distinction between odd and even position pairs any
       more. So we reuse the type {!PowerList.t}. *)
   type ('odd,'even) t =
-    | One of 'odd
+    | Zero
     | TwicePlusOne of 'odd * ('even*'odd) PowerList.t
 
 
@@ -113,13 +110,11 @@ module AlternatingPowerList = struct
       ['odd] value for padding, a function [f:'a -> 'odd] for odd
       positions, and [g:'a -> 'even] for even positions. *)
   let of_list d f g = function
-    | [] -> One d
-    | [a] -> One (f a)
-    | a::b::l ->
+    | [] -> Zero
+    | a::l ->
         let d' x = g x , d in
         let fg (x,y) = g x , f y in
-        let (b',l') = PowerList.pair_up b l in
-        TwicePlusOne ( f a , PowerList.of_ne_list d' fg b' l')
+        TwicePlusOne (f a , PowerList.of_list d' fg l)
 
 end
 
@@ -127,24 +122,21 @@ module PL = PowerList
 module APL = AlternatingPowerList
 
 
-(** [pass join t l] takes a non-empty alternating power list
-    [APL.TwicePlusOne(t,l)], and groups the consecutive triplets using
-    [Node]: the three first elements (of respective types ['o],
-    ['e] and ['o]) are joined, then for each group of four elements
-    (of type [('e,'o),('e,'o)]) the first one is kept as such, and the
-    three others can be joined. *)
-let pass : 'a. 'a tree -> ('a*'a tree) PL.t -> ('a tree,'a) APL.t =
-  fun t l ->
-    match l with
-    | PL.One (a,s) -> APL.One (Node(t,a,s))
-    | PL.TwicePlusOne((a,s),l) ->
-        APL.TwicePlusOne ( Node(t,a,s) ,
-                           PL.map (fun ((a,t),(b,s)) -> a , Node(t,b,s) ) l )
+(** [pass join t l] takes an alternating power list with at least
+    three elements, and groups the consecutive triplets using [Node]:
+    the three first elements (of respective types ['o], ['e] and ['o])
+    are joined, then for each group of four elements (of type
+    [('e,'o),('e,'o)]) the first one is kept as such, and the three
+    others can be joined. *)
+let pass : 'a. 'a tree -> ('a*'a tree) -> (('a*'a tree)*('a*'a tree)) PL.t -> ('a tree,'a) APL.t =
+  fun t (x,s) l ->
+    APL.TwicePlusOne ( Node (t,x,s) , PL.map (fun ((a,t),(b,s)) -> a , Node(t,b,s) ) l )
 
 let rec balance_powerlist : 'e. ('e tree,'e) APL.t -> 'e tree = function
-  | APL.One t -> t
-  | APL.TwicePlusOne (t,l) ->
-      balance_powerlist (pass t l)
+  | APL.Zero -> Leaf
+  | APL.TwicePlusOne (t,PL.Zero) -> t
+  | APL.TwicePlusOne (t,PL.TwicePlusOne (xs,l)) ->
+      balance_powerlist (pass t xs l)
 
 let singleton x = Node(Leaf,x,Leaf)
 let balance l =
