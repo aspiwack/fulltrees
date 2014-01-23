@@ -29,7 +29,7 @@ Starting with a list <#l#>, we want to turn it into a binary tree <#t#> of the f
 
 With the constraints that <#l#> must be the infix traversal of <#t#> and that <#t#> must be {emph"full"}, in the sense that every level except the last are required to be completely filled. Such a function turns, in particular, sorted list into balanced binary search trees.
 
-There are a number of algorithms to achieve this result in linear time. Here we consider an algorithm, presented in Section~{ref_ s_algo}, which repeatedly pairs up trees of height $h$ in a list to form a list of trees of height $h+1$. Our interest in this algorithm sprouts from the fact that its correctness is not obvious; in particular the invariants are complex: the main loop operates on a list of size $2^k-1$ whose elements are alternately of two distinct forms.
+There are a number of algorithms to achieve this result in linear time. Here we consider an algorithm, presented in Section~{ref_ s_algo}, which repeatedly pairs up trees of height $h$ in a list to form a list of trees of height $h+1$. Our interest in this algorithm sprouts from the fact that its correctness is not obvious; in particular the invariants are complex: the main loop operates on a list of length $2^k-1$ whose elements are alternately of two distinct forms.
 
 In Sections~{ref_ s_ocaml} and~{ref_ s_coq} we show refinements of the algorithm where the invariants are pushed into the types, leading to a complete and short proof of correctness in Coq.
 "
@@ -46,7 +46,7 @@ We decompose the problem into two parts: computing an alternating list of length
 
 Given an alternating list <#lst#>, by pairing the trees in <#lst#> using only one traversal of the list, we obtain an alternating list with exactly half as many trees. Each pairing requires two trees and one label used as a root. In order to build a list that is alternated, we also need a second label, that is kept as a single element. This explains why we consider at each step the four first elements of the list.
 
-A single traversal, encoded by <#pass : 'a tree_or_elt list -> 'a tree_or_elt_list#>, reduces an alternating list of length ${exponent $2$ $k$} - 1 {geqslant} 3$ to an alternating list of length ${exponent $2$ $k-1$} -1$. By iterating this process using <#loop : 'a tree_or_elt list -> 'a tree#>, we reduce the original list to a list of size one, whose element is a balanced tree containing all the labels of the first tree. 
+A single traversal, encoded by <#pass : 'a tree_or_elt list -> 'a tree_or_elt_list#>, reduces an alternating list of length ${exponent $2$ $k$} - 1 {geqslant} 3$ to an alternating list of length ${exponent $2$ $k-1$} -1$. By iterating this process using <#loop : 'a tree_or_elt list -> 'a tree#>, we reduce the original list to a list of length one, whose element is a balanced tree containing all the labels of the first tree. 
 
 {display"<#let join left node right = Tree (Node (left, node, right))
 
@@ -91,11 +91,11 @@ The <#loop#> function of Section~{ref_ s_algo} relies on the invariant that the 
 
 It is not immediately apparent that these properties hold. If it does not take a tremendous effort to convince oneself that the <#balance#> function of Section~{ref_ s_algo} is indeed correct, a direct mechanically checked proof would not be very practical.
 
-{subsection"Size invariants"}
+{subsection"Length invariants"}
 
 Our goal in this section is to avoid resorting to <#assert false#>. In addition to making sure that <#balance#> indeed terminates with a value, it will make it considerably simpler to implement the balancing algorithm in Coq in Section~{ref_ s_coq}.
 To achieve this goal, it is necessary to have more precise types.
-Let us focus first on the size invariants: we will need to define a type which contains exactly the non-empty lists of size $2^n-1$.
+Let us focus first on the length invariants: we will need to define a type which contains exactly the non-empty lists of length $2^n-1$.
 
 A data structure which holds $2^n-1$ elements brings complete binary trees to mind. Even though it is possible -- though not necessary convenient -- to represent complete binary trees in Ocaml, they are not the appropriate structure. First, because complete binary trees are full trees and are, hence, unlikely to serve as a useful intermediate data structure to build a full tree. Second because there is a simpler -- albeit more exotic -- alternative.
 Indeed, let us consider the following recursive definition of $2^n-1$:
@@ -108,7 +108,7 @@ Which is just a fancy way of saying that the $2^n-1$ are precisely those number 
   array_line [exponent $a$ $2^1-1$; $=$ ; $a$];
   array_line [exponent $a$ ${exponent $2$ $n+1$}-1$; $=$; $a{times}{exponent $(a^2)$ $2^n-1$}$];
 ]) end}
-If $a$ is read as a type, then $a^n$, is nothing but the type of lists of length $n$ filled with elements of $a$. Depending on the algorithm used to compute the exponential, one gets a different flavour of list. The standard linked lists correspond to the naïve algorithm ${exponent $a$ $n+1$}=a{times}a^n$, which is associated with the unary representation of numbers. Using the algorithm above, we restrict the lists to have size $2^n$ and the shape is more unusual. Generalising to an arbitrary $n$, we obtain the (non-uniformly recursive) datatype, which we shall call {emph"power lists"}:
+If $a$ is read as a type, then $a^n$, is nothing but the type of lists of length $n$ filled with elements of $a$. Depending on the algorithm used to compute the exponential, one gets a different flavour of list. The standard linked lists correspond to the naïve algorithm ${exponent $a$ $n+1$}=a{times}a^n$, which is associated with the unary representation of numbers. Using the algorithm above, we restrict the lists to have length $2^n$ and the shape is more unusual. Generalising to an arbitrary $n$, we obtain the (non-uniformly recursive) datatype, which we shall call {emph"power lists"}:
 {display"<#module PowerList = struct
 
   type 'a t =
@@ -282,7 +282,7 @@ The algorithm indeed builds only full trees.
 
 {subsection"Structural initialisation"}
 
-The padding conversion from lists to lists of size $2^n-1$ is not structural, due to the use of <#pair_up#> in the recursive call. We will need another intermediate structure: it must be isomorphic to the type of list, but it must conform with the structure of <@PowerList.of_ne_list@>. That is, we want a datatype such that $"<@'a t@>"="<@'a eo * 'a t@>"$. As it turns out, this is a good definition, and it is a non-uniform datatype which corresponds to a numerical representation.
+The padding conversion from lists to lists of length $2^n-1$ is not structural, due to the use of <#pair_up#> in the recursive call. We will need another intermediate structure: it must be isomorphic to the type of list, but it must conform with the structure of <@PowerList.of_ne_list@>. That is, we want a datatype such that $"<@'a t@>"="<@'a eo * 'a t@>"$. As it turns out, this is a good definition, and it is a non-uniform datatype which corresponds to a numerical representation.
 
 Indeed, we can write any non-zero natural number in binary with digits $1$ and $2$ (but not $0$). In this system, for example, $8$ is represented as $112$. Here is the definition:
 {display"<@Module BinaryList.
@@ -334,7 +334,7 @@ In terms of binary lists:
 
 End BinaryList.@>"}
 
-We can now write a structurally recursive <#PowerList.of_ne_list#>, using binary lists as the structural argument. Notice that, as we do not know in advance the size of the produced list, a <@PowerList.U@> is returned:
+We can now write a structurally recursive <#PowerList.of_ne_list#>, using binary lists as the structural argument. Notice that, as we do not know in advance the length of the produced list, a <@PowerList.U@> is returned:
 {display"<@Module PowerList.
 
   @{module_elipsis}@
