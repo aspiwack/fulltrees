@@ -28,6 +28,8 @@ let uprho = command "uprho" ~packages:["upgreek",""] [] M
 let upsigma = command "upsigma" ~packages:["upgreek",""] [] M
 let upomega = command "upomega" ~packages:["upgreek",""] [] M
 
+let log_ = command "log" [] M
+
 let display x =
   displaymath (parbox (`Linewidth 0.9) x)
 

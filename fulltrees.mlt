@@ -61,7 +61,7 @@ let rec loop list = match list with
   | list -> loop (pass list)
 #>"}
 
-It remains to show how to transform a list of labels of length $n$ into an alternating list of trees and labels. Each of the original tree has depth zero or one: they are leaves or contain only one label. Because we want a list of length precisely $2^k -1$, for $k = 1 + {index log $2$} n$, it means we need $2^k - 1 - n$ leaves. This quantity is computed as the variable <#missing#>. The function <#pad#> computes the alternating list by creating as many leaves as needed, alternating them with elements, and once enough leaves are created, promotes all the odd-position labels into trees.
+It remains to show how to transform a list of labels of length $n$ into an alternating list of trees and labels. Each of the original tree has depth zero or one: they are leaves or contain only one label. Because we want a list of length precisely $2^k -1$, for $k = 1 + {index log_ $2$} n$, it means we need $2^k - 1 - n$ leaves. This quantity is computed as the variable <#missing#>. The function <#pad#> computes the alternating list by creating as many leaves as needed, alternating them with elements, and once enough leaves are created, promotes all the odd-position labels into trees.
 
 {display"<#let complete list =
   let n = List.length list in

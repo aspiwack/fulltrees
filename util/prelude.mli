@@ -17,6 +17,8 @@ val uprho : Latex.t
 val upsigma : Latex.t
 val upomega : Latex.t
 
+val log_ : Latex.t
+
 val display : Latex.t -> Latex.t
 
 val module_elipsis : Latex.t
