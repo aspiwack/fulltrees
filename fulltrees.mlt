@@ -29,7 +29,7 @@ Starting with a list <#l#>, we want to turn it into a binary tree <#t#> of the f
 
 With the constraints that <#l#> must be the infix traversal of <#t#> and that <#t#> must be {emph"full"}, in the sense that every level except the last are required to be completely filled. Such a function turns, in particular, sorted list into balanced binary search trees.
 
-There is a number of algorithms to achieve this result in linear time. Here we consider an algorith, presented in Section~{ref_ s_algo}, which repeatedly pairs up trees of height $h$ in a list to form a list of trees of height $h+1$. Our interest in this algorithm sprouts from the fact that its correctness is not obvious; in particular the invariants are complex: the main loop operates on a list of size $2^n-1$ whose elements are full trees whose height is alternatively a given $h$ and $1$.
+There is a number of algorithms to achieve this result in linear time. Here we consider an algorithm, presented in Section~{ref_ s_algo}, which repeatedly pairs up trees of height $h$ in a list to form a list of trees of height $h+1$. Our interest in this algorithm sprouts from the fact that its correctness is not obvious; in particular the invariants are complex: the main loop operates on a list of size $2^n-1$ whose elements are full trees whose height is alternatively a given $h$ and $1$.
 
 In Sections~{ref_ s_ocaml} and~{ref_ s_coq} we show refinements of the algorithm where the invariants are pushed into the types, leading to a complete and short proof of correctness in Coq.
 "
@@ -46,8 +46,8 @@ Sample Ocaml code:
 let ocaml = "{section"Removing partial functions" ~label:s_ocaml}
 
 (* arnaud: make more precise when the previous section is written and has names for things *)
-(* arnaud: it's not entirely true that the size invariant is preserved during the main loop, it is an invariant of the external "pass" loop, but not the internal "paring" loop, which certainly does not make things easier. *)
-The functions of Section~{ref_ s_algo} rely on the facts that the following invariant hold throughout the main loop: the list has size $2^n-1$ for some $n$ and is non-empty, and all the even position elements (counting from $1$) are singleton trees.
+(* arnaud: it's not entirely true that the size invariant is preserved during the main loop, it is an invariant of the external "pass" loop, but not the internal "pairing" loop, which certainly does not make things easier. *)
+The functions of Section~{ref_ s_algo} rely on the fact that the following invariant holds throughout the main loop: the list has size $2^n-1$ for some $n$ and is non-empty, and all the even-position elements (counting from $1$) are singleton trees.
 
 Yet it is not immediately apparent that these properties hold. If it does not take a tremendous effort to convince oneself that the <#balance#> function of Section~{ref_ s_algo} is indeed correct, a direct mechanically checked proof would not be very practical.
 
@@ -58,7 +58,7 @@ Let us turn to representing non-empty lists of size $2^n-1$. There is a well-kno
 Instead, let us consider the following recursive definition of $2^n-1$:
 {displaymath begin just_left `Brace (array [`L;`L;`L] [
   array_line [$2^1-1$; $=$ ; $1$];
-  array_line [${exponent $2$ $n+1$}-1$; $=$; $2*(2^n-1)+1$];
+  array_line [${exponent $2$ $n+1$}-1$; $=$; $2 \times (2^n-1)+1$];
 ]) end}
 Which is just a fancy way of saying that the $2^n-1$ are precisely those number which are written only with $1$-s in binary representation. In general, given a reasonable representation of (a subset of) the natural numbers, a corresponding structurally recursive definition of exponential can be deduced:
 {displaymath begin just_left `Brace (array [`L;`L;`L] [
@@ -83,7 +83,7 @@ Although the power lists may look like some sort of trees, it is not a very accu
   "<#[1;(2,3);((4,5),(6,7))]#>";
   "<#[1;(2,3);((4,5),(6,7));(((8,9),(10,11)),((12,13),(14,15)))]#>";
  ]}
-Elements appear in order, like in a list, but they are packed twice as tightly after each <#TwicePlueOne#>.
+Elements appear in order, like in a list, but they are packed twice as tightly after each <#TwicePlusOne#>.
 
 Just like with regular lists, there is a {emph"map"} function for power lists. Due to the non-uniformity it is a little trickier{footnote"The type annotation on <#PowerList.map#> informs Ocaml that <#map#> is a non-uniform recursive function. Without the type annotation, Ocaml simply assumes that <#map#> is uniformly recursive and fails to typecheck since <#f#> and <#f'#> have different types."} than the regular list map: in the recursive steps, the argument function <#f#> needs to process two consecutive elements at a time.
 {display"<#module PowerList = struct
@@ -101,13 +101,13 @@ end#>"}
 
 {subsection"Alternation"}
 
-In Section~{ref_ s_algo}, we encode elements as singleton trees, relying on the <#root#> function to extract the value from the tree. If the invariant that even-position element are actually singleton, <#root#> can fail if the applied to an empty tree, or lose elements if applied to a bigger tree.
+In Section~{ref_ s_algo}, we encode elements as singleton trees, relying on the <#root#> function to extract the value from the tree. If the invariant that even-position elements are actually singleton, <#root#> can fail if the applied to an empty tree, or lose elements if applied to a bigger tree.
 
 In this section, instead, we consider a variant of <#'a PowerList.t#> where every odd position is a tree, and every even position an element. More generally, we define a type <#('odd,'even) AlternatingPowerList.t#> where odd positions have type <#'odd#>, and even positions have type <#'even#>. Such a list should have the following pattern:
 {itemize [
   "<#['odd;('even,'odd);(('even,'odd),('even,'odd))#>";
 ]}
-After the first element, which must have type <#'odd#>, there is no difference between even and <#'odd#> position: indeed, removing the first element, we actually have an <#('even*'odd) PowerList.t#>. Hence the definition:
+After the first element, which must have type <#'odd#>, there is no difference between even and odd position: indeed, removing the first element, we actually have an <#('even*'odd) PowerList.t#>. Hence the definition:
 {display"<#module AlternatingPowerList = struct
   type ('odd,'even) t =
     | One of 'odd
@@ -139,7 +139,7 @@ The heart of this section is a function which turns a non-empty list of <#'a#> i
   | Odd of 'a
   | Even of ('a*'a)#>"}
 
-We can fold a non-empty list into a <#'a eo * ('a*'a) list#> with the function <#pair_up 'a -> 'a list -> 'a eo * ('a*'a) list#>:
+We can fold a non-empty list into a <#'a eo * ('a*'a) list#> with the function <#pair_up: 'a -> 'a list -> 'a eo * ('a*'a) list#>:
 {display"<#let rec pair_up hd = function
   | [] -> Odd hd , []
   | b::l ->
