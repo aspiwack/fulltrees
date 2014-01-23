@@ -58,7 +58,7 @@ Let us turn to representing non-empty lists of size $2^n-1$. There is a well-kno
 Instead, let us consider the following recursive definition of $2^n-1$:
 {displaymath begin just_left `Brace (array [`L;`L;`L] [
   array_line [$2^1-1$; $=$ ; $1$];
-  array_line [${exponent $2$ $n+1$}-1$; $=$; $2 \times (2^n-1)+1$];
+  array_line [${exponent $2$ $n+1$}-1$; $=$; $2 {times} (2^n-1)+1$];
 ]) end}
 Which is just a fancy way of saying that the $2^n-1$ are precisely those number which are written only with $1$-s in binary representation. In general, given a reasonable representation of (a subset of) the natural numbers, a corresponding structurally recursive definition of exponential can be deduced:
 {displaymath begin just_left `Brace (array [`L;`L;`L] [
