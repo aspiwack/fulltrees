@@ -46,7 +46,7 @@ We decompose the problem into two parts: computing an alternating list of length
 
 Given an alternating list <#lst#>, by pairing the trees in <#lst#> using only one traversal of the list, we obtain an alternating list with exactly half as many trees. Each pairing requires two trees and one label used as a root. In order to keep the lists alternating, we also need a second label, that is kept as a single element. This explains why we consider at each step the four first elements of the list.
 
-A single traversal, encoded by <#pass: 'a tree_or_elt list -> 'a tree_or_elt_list#>, reduces an alternating list of length ${exponent $2$ $k$} - 1 {geqslant} 3$ to an alternating list of length ${exponent $2$ $k-1$} -1$. Also the height of trees is increased by one in the new list. By iterating this process using <#loop: 'a tree_or_elt list -> 'a tree#>, we reduce the original list to a list of size one, whose element is a balanced tree containing all the labels of the first tree. 
+A single traversal, encoded by <#pass : 'a tree_or_elt list -> 'a tree_or_elt_list#>, reduces an alternating list of length ${exponent $2$ $k$} - 1 {geqslant} 3$ to an alternating list of length ${exponent $2$ $k-1$} -1$. Also the height of trees is increased by one in the new list. By iterating this process using <#loop : 'a tree_or_elt list -> 'a tree#>, we reduce the original list to a list of size one, whose element is a balanced tree containing all the labels of the first tree. 
 
 {display"<#let join left node right = Tree (Node (left, node, right))
 
