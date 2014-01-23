@@ -7,6 +7,7 @@ let keywords = [
   "in";
   "val";
   "fun";
+  "function";
   "type";
   "and";
   "match";
