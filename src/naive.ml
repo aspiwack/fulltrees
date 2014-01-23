@@ -24,7 +24,7 @@ let complete list =
   let missing = (pow2 1) - n - 1 in
   let rec pad missing = function
     | head::tail when missing <> 0 -> Tree Leaf :: Elt head :: pad (missing - 1) tail
-    | one::two::others -> join Leaf one Leaf :: Elt two :: pad 0 others
+    | odd::even::others -> join Leaf odd Leaf :: Elt even :: pad 0 others
     | [single] -> [join Leaf single Leaf]
     | [] -> []
   in
