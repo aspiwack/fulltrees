@@ -60,12 +60,12 @@ Instead, let us consider the following recursive definition of $2^n-1$:
   array_line [$2^1-1$; $=$ ; $1$];
   array_line [${exponent $2$ $n+1$}-1$; $=$; $2*(2^n-1)+1$];
 ]) end}
-We can use these equations to define, recursively, the {exponent $a$ $2^n-1$}:
+Which is just a fancy way of saying that the $2^n-1$ are precisely those number which are written only with $1$-s in binary representation. In general, given a reasonable representation of (a subset of) the natural numbers, a corresponding structurally recursive definition of exponential can be deduced:
 {displaymath begin just_left `Brace (array [`L;`L;`L] [
   array_line [exponent $a$ $2^1-1$; $=$ ; $a$];
   array_line [exponent $a$ ${exponent $2$ $n+1$}-1$; $=$; $a*{exponent $(a^2)$ $2^n-1$}$];
 ]) end}
-These equations, can also be read as a recursive definition of the $2^n-1$-th power of a type <#'a#>, {emph"i.e."} lists of length <#n#>, which we can translate into a (non-uniformly recursive) datatype:
+If $a$ is read as a type, then $a^n$, is nothing but the type of lists of length $n$ filled with elements of $a$. Depending on the algorithm used to compute the exponential, one gets a different flavour of list. The standard linked lists correspond to the naïve algorithm ${exponent $a$ $n+1$}=a*a^n$, which is associated with the unary representation of numbers. Using the algorithm above, we restrict the lists to have size $2^n$ and the shape is more unusual. Generalising to an arbitrary $n$, we obtain the (non-uniformly recursive) datatype, which we shall call {emph"power lists"}:
 {display"<#module PowerList = struct
 
   type 'a t =
@@ -74,9 +74,9 @@ These equations, can also be read as a recursive definition of the $2^n-1$-th po
 
 end#>"}
 
-Such a type is in the spirit of Okasaki's {emph"numerical representation"}~{cite"Okasaki1999"}(*arnaud: add relevant chapters*) variants of lists. In fact, this very type appears in~{cite"Okasaki1999"} as a pedagogical introduction to more general purpose types.
+The correspondence between flavours of lists and numerical representation is du to Okasaki~{cite"Okasaki1999"}(*arnaud: add relevant chapters*). As a matter of fact, the type of power lists actually appears in~{cite"Okasaki1999"} as a pedagogical introduction to non-uniformly recursive lists. With numerical representations which cover the whole set of natural numbers, we obtain lists with unusual shapes but which can have any number of elements. We will return to these in Section~{ref_ s_coq}.
 
-Although <#'a PowerList.t#> may look like a type of trees, it is not a very accurate depiction. The easiest way to picture how <#'a PowerList.t#> works is to see <#TwicePlusOne#> as a fancy <#(::)#>, then the lists with, respectively, $1$, $3$, $7$, and $15$ elements are as follows:
+Although the power lists may look like some sort of trees, it is not a very accurate depiction. The easiest way to picture how power lists works is to see <#TwicePlusOne#> as a fancy <#(::)#>, then the lists with, respectively, $1$, $3$, $7$, and $15$ elements are as follows:
 {itemize [
   "<#[1]#>";
   "<#[1;(2,3)]#>";
@@ -85,7 +85,7 @@ Although <#'a PowerList.t#> may look like a type of trees, it is not a very accu
  ]}
 Elements appear in order, like in a list, but they are packed twice as tightly after each <#TwicePlueOne#>.
 
-Just like with regular lists, there is a {emph"map"} function for <#'a PowerList.t#>. Due to the non-uniformity it is a little trickier{footnote"The type annotation on <#PowerList.map#> informs Ocaml that <#map#> is a non-uniform recursive function. Without the type annotation, Ocaml simply assumes that <#map#> is uniformly recursive and fails to typecheck since <#f#> and <#f'#> have different types."} than the regular list map: in the recursive steps, the argument function <#f#> needs to process two consecutive elements at a time.
+Just like with regular lists, there is a {emph"map"} function for power lists. Due to the non-uniformity it is a little trickier{footnote"The type annotation on <#PowerList.map#> informs Ocaml that <#map#> is a non-uniform recursive function. Without the type annotation, Ocaml simply assumes that <#map#> is uniformly recursive and fails to typecheck since <#f#> and <#f'#> have different types."} than the regular list map: in the recursive steps, the argument function <#f#> needs to process two consecutive elements at a time.
 {display"<#module PowerList = struct
 
   #{ldots}#
