@@ -132,12 +132,12 @@ let pass : 'a. 'a tree -> ('a*'a tree) -> (('a*'a tree)*('a*'a tree)) PL.t -> ('
   fun t (x,s) l ->
     APL.TwicePlusOne ( Node (t,x,s) , PL.map (fun ((a,t),(b,s)) -> a , Node(t,b,s) ) l )
 
-let rec balance_powerlist : 'e. ('e tree,'e) APL.t -> 'e tree = function
+let rec loop : 'e. ('e tree,'e) APL.t -> 'e tree = function
   | APL.Zero -> Leaf
   | APL.TwicePlusOne (t,PL.Zero) -> t
   | APL.TwicePlusOne (t,PL.TwicePlusOne (xs,l)) ->
-      balance_powerlist (pass t xs l)
+      loop (pass t xs l)
 
 let singleton x = Node(Leaf,x,Leaf)
 let balance l =
-  balance_powerlist (APL.of_list Leaf singleton (fun e->e) l)
+  loop (APL.of_list Leaf singleton (fun e->e) l)
