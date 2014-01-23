@@ -84,17 +84,18 @@ The balancing algorithm <#balance: 'a list -> 'a tree #> is thus given by:
 
 let ocaml = "{section"Removing partial functions" ~label:s_ocaml}
 
-(* arnaud: make more precise when the previous section is written and has names for things *)
-(* arnaud: it's not entirely true that the size invariant is preserved during the main loop, it is an invariant of the external "pass" loop, but not the internal "pairing" loop, which certainly does not make things easier. *)
-The functions of Section~{ref_ s_algo} rely on the fact that the following invariant holds throughout the main loop: the list has size $2^n-1$ for some $n$ and is non-empty, and all the even-position elements (counting from $1$) are singleton trees.
+The <#loop#> function of Section~{ref_ s_algo} relies on the invariant that the <#list#> argument has length $2^n-1$. In addition <#pass#> requires a non-empty list, using the fact that <#pass#> never returns an empty list, we can treat the empty list separately and enforce the common invariant that <#list#> has length $2^n-1$ for $n>0$. Finally, all the odd position values must be of the form <#Tree t#>, whereas all the even positions must be of the form <#Elt x#>.
 
-Yet it is not immediately apparent that these properties hold. If it does not take a tremendous effort to convince oneself that the <#balance#> function of Section~{ref_ s_algo} is indeed correct, a direct mechanically checked proof would not be very practical.
+It is not immediately apparent that these properties hold. If it does not take a tremendous effort to convince oneself that the <#balance#> function of Section~{ref_ s_algo} is indeed correct, a direct mechanically checked proof would not be very practical.
 
 {subsection"Size invariants"}
 
-Let us turn to representing non-empty lists of size $2^n-1$. There is a well-known data structure which holds $2^n-1$ values: complete binary trees of height $n$. But given that trees are already what our algorithm builds, it is unlikely that complete binary trees are the appropriate structure for the loop.
+Our goal in this section is to avoid resorting to <#assert false#>. In addition to making sure that <#balance#> indeed terminates with a value, it will make it considerably simpler to implement the balancing algorithm in Coq in Section~{ref_ s_coq}.
+To achieve this goal, it is necessary to have more precise types.
+Let us focus first on the size invariants: we will need to define a type which contains exactly the non-empty lists of size $2^n-1$.
 
-Instead, let us consider the following recursive definition of $2^n-1$:
+A data structure which holds $2^n-1$ elements brings complete binary trees to mind. Even though it is possible -- though not necessary convenient -- to represent complete binary trees in Ocaml, they are not the appropriate structure. First, because complete binary trees are full trees and are, hence, unlikely to serve as a useful intermediate data structure to build a full tree. Second because there is a simpler -- albeit more exotic -- alternative.
+Indeed, let us consider the following recursive definition of $2^n-1$:
 {displaymath begin just_left `Brace (array [`L;`L;`L] [
   array_line [$2^1-1$; $=$ ; $1$];
   array_line [${exponent $2$ $n+1$}-1$; $=$; $2 {times} (2^n-1)+1$];
