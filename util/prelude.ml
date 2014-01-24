@@ -34,7 +34,24 @@ let display x =
   displaymath (parbox (`Linewidth 0.9) x)
 
 let vdots = command "vdots" [] A
-let module_elipsis = hspace (`Em 2.5) ^^ vdots
+let module_elipsis =
+  let i = 1. in
+  let h = 1.5 in
+  let debug = false in
+  (** /parameters **)
+  let h2 = `Baselineskip (h/.2.) in
+  let dframe x =
+    if debug then framebox (`Width 2.) x
+    else x
+  in
+  hspace (`Em i) ^^
+  dframe (raisebox ~shift:(`Ex (-1.)) ~fakeheight:(h2,h2) vdots)
+
+  (* concat [ *)
+  (*   hspace (`Em i); *)
+  (*   parbox (`Pt 0.) ~valign:`C (rule_ ~lift:(`Baselineskip (-.h/.2.)) (`Pt 1.) (`Baselineskip h) ^^ text"a"); *)
+  (*   parbox (`Pt 0.) ~valign:`C (vdots); *)
+  (* ] *)
 
 (**** Bibliography ****)
 let cite ?extra t =
