@@ -40,9 +40,9 @@ module PowerList = struct
   (** [map f l] is the functorial action of [f] on the powerlist [l]. *)
   let rec map : 'a 'b. ('a->'b) -> 'a t -> 'b t = fun f -> function
     | Zero -> Zero
-    | TwicePlusOne (x,lst) ->
+    | TwicePlusOne (elt,lst) ->
         let f' (x,y) = f x , f y in
-        TwicePlusOne ( f x , map f' lst)
+        TwicePlusOne (f elt , map f' lst)
 
   (** [pair_up l] takes the non-empty list [l] and returns, if [l] has
       even length [Even a b,l'] where [(a,b)::l'] has consecutive

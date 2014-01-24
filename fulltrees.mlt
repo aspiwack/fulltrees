@@ -138,9 +138,9 @@ Just like with regular lists, there is a {emph"map"} function for power lists. D
 
   let rec map : 'a 'b. ('a->'b) -> 'a t -> 'b t = fun f -> function
     | Zero -> Zero
-    | TwicePlusOne (x,lst) ->
+    | TwicePlusOne (elt,lst) ->
         let f' (x,y) = f x , f y in
-        TwicePlusOne ( f x , map f' lst)
+        TwicePlusOne (f elt , map f' lst)
 
 end#>"}
 
