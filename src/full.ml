@@ -44,8 +44,8 @@ module PowerList = struct
         let f' (x,y) = f x , f y in
         TwicePlusOne (f elt , map f' lst)
 
-  (** [pair_up l] takes the non-empty list [l] and returns, if [l] has
-      even length [Even a b,l'] where [(a,b)::l'] has consecutive
+  (** [pair_up lst] takes a list [lst] and returns, if [lst] has
+      even length [Even a b,lst'] where [(a,b)::l'] has consecutive
       elements of [l] paired up, otherwise [Odd a,l'] where [l'] is
       the (possibly empty) list of consecutive elements of [l.tl]
       paired up. *)
@@ -53,15 +53,12 @@ module PowerList = struct
     | Empty
     | Odd of 'a * ('a*'a) list
     | Even of ('a*'a) * ('a*'a) list
-  let rec pair_up = function
-    | [] -> Empty
-    | a::l ->
-        begin match pair_up l with
-        | Empty -> Odd (a , [])
-        | Odd (b,l') -> Even ((a,b) , l')
-        | Even (bc,l') -> Odd (a , bc::l')
-        end
-
+  let pair_up l =
+    let succ elt = function
+      | Empty -> Odd (elt , [])
+      | Odd (b,l') -> Even ((elt,b) , l')
+      | Even (bc,l') -> Odd (elt , bc::l')
+    in List.fold_right succ l Empty
 
   (** Given a casting function ['a->'b], we can construct an ['a t]
       from a non-empty ['a list] of any size (here represented as an
