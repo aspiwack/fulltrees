@@ -72,8 +72,7 @@ Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l
 
   Fixpoint list_of_binary_list {A B} (f:A->list B) (l:BL.T A) : list B :=
     match l with
-    | BL.one x => f x
-    | BL.two x y => f x ++ f y
+    | BL.zero => []
     | BL.tpo x l =>
       f x ++ (list_of_binary_list (f+++f) l)
     | BL.tpt x y l =>
@@ -94,7 +93,7 @@ Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l
     revert A B f l.
     (* because of typing issue, [induction] doesn't work. We use a fixpoint directly. *)
     fix 4.
-    { intros A B f [ [? ?] | [? ?] [? ?] | [a b] l | [? ?] ? ? ];
+    { intros A B f [ | [a b] l | [? ?] ? ? ];
         try solve [simpl;rewrite <-?app_assoc;reflexivity].
       simpl; rewrite <-?app_assoc.
       rewrite binary_list_twice_preserves_order.
@@ -102,17 +101,17 @@ Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l
   Qed.
   Hint Rewrite binary_list_twice_preserves_order : simplify.
 
-  Lemma binary_list_of_ne_list_preserves_order A B (f:A->list B) (x:A) (l:list A) :
-    list_of_binary_list f (BL.of_ne_list x l) = f x ++ flat_map f l.
+  Lemma binary_list_of_list_preserves_order A B (f:A->list B) (l:list A) :
+    list_of_binary_list f (BL.of_list l) = flat_map f l.
   Proof.
-    now (revert x;induction l).
+    now induction l.
   Qed.
-  Hint Rewrite binary_list_of_ne_list_preserves_order : simplify.
+  Hint Rewrite binary_list_of_list_preserves_order : simplify.
 
 
   Fixpoint list_of_powerlist_n {A X n} (f:A->list X) : PL.T A n -> list X :=
     match n with
-    | 0 => fun x => f x
+    | 0 => fun x => []
     | S n => fun l => let '(x,l) := l in
       f x ++ list_of_powerlist_n (f+++f) l
     end
@@ -133,10 +132,10 @@ Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l
   Lemma power_list_of_binary_list_preserves_order A B X (d:A->B) (f:A*A->B) (r:B->list X) (h:A->list X) (l:BL.T A) :
     (forall a, r (d a) = h a) ->
     (forall a b, r (f (a,b)) = h a ++ h b) ->
-  list_of_powerlist r (PL.of_blist_pairing_with_cast d f l) = list_of_binary_list h l.
+  list_of_powerlist r (PL.of_binary_list d f l) = list_of_binary_list h l.
   Proof.
     revert B X d f r h.
-    induction l as [ | | A x l hl | A x y l hl ]; intros B X d f r h hd hf;
+    induction l as [ | A x l hl | A x y l hl ]; intros B X d f r h hd hf;
       [ easy .. | | ].
     + (* case l=tpo x l *)
       simplify.
@@ -148,7 +147,7 @@ Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l
 
   Definition list_of_alternating_powerlist_n {A B X n} (f:A->list X) (g:B->list X) : APL.T A B n -> list X :=
     match n with
-    | 0 => fun (x:APL.T _ _ 0) => f x
+    | 0 => fun _ => []
     | S n => fun l => let '(x,l) := l in
       let f' xy := let '(x,y) := xy in g x ++ f y in
       f x ++ list_of_powerlist_n f' l
@@ -173,7 +172,7 @@ Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l
   list_of_alternating_powerlist rf rg (APL.of_binary_list d f g l) = list_of_binary_list h l.
   Proof.
     intros hd hf hg.
-    destruct l as [ | | x l | x y l ];
+    destruct l as [ | x l | x y l ];
       [ unfold list_of_alternating_powerlist; easy .. | | ].
     + (* case l=tpo x l *)
       simplify.
@@ -194,9 +193,8 @@ Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l
     + (* case l=[] *)
       unfold list_of_alternating_powerlist; easy.
     + (* case l=x::l *)
-      simpl.
-      rewrite <- binary_list_of_ne_list_preserves_order.
-      now apply alternating_power_list_of_binary_list_preserves_order.
+      simpl; unfold APL.of_list.
+      now rewrite alternating_power_list_of_binary_list_preserves_order with (h:=h).
   Qed.
 
   Lemma powerlist_map_preserves_order A B C n (f:A->B) (h₁:A->list C) (h₂:B->list C) (l:PL.T A n) :
@@ -215,36 +213,50 @@ Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l
 
   Definition unit {A} : A->list A := fun x => [x].
 
-  Lemma pass_preserves_order A n p (l:APL.T (FullTree A (S p)) A (S n)) :
+  Lemma pass_preserves_order A n p (l:APL.T (FullTree A (S p)) A (S (S n))) :
     list_of_alternating_powerlist_n list_of_full_tree_n unit (pass l) =
     list_of_alternating_powerlist_n list_of_full_tree_n unit l.
   Proof.
-    destruct n as [ | n' ].
-    + (* case n=0 *)
-      easy.
-    + (* case n=S n' *)
-      destruct l as [ t [ [ a s ] l ]]; simpl.
-      rewrite <-!app_assoc, !app_comm_cons.
-      now rewrite powerlist_map_preserves_order with
+    destruct l as [ t [ [ a s ] l ]]; simpl.
+    rewrite <-!app_assoc, !app_comm_cons.
+    now rewrite powerlist_map_preserves_order with
          (h₁ := (unit+++list_of_full_tree_n) +++ (unit+++list_of_full_tree_n)).
   Qed.
   Hint Rewrite pass_preserves_order : simplify.
 
-  Lemma balance_powerlist_preserves_order A n p (l:APL.T (FullTree A (S p)) A n) :
-    list_of_full_tree_n (balance_powerlist l) =
+  Lemma loop_preserves_order A n p (l:APL.T (FullTree A (S p)) A (S n)) :
+    list_of_full_tree_n (loop l) =
     list_of_alternating_powerlist_n list_of_full_tree_n unit l.
   Proof.
-    now (revert p l ; induction n ).
+    revert p l ; induction n as [ | n h ].
+    + easy.
+    + intros p l.
+      change (loop l) with (loop (pass l)); simpl plus.
+      easy.
   Qed.
 
 Proof.
   (** Proof of the theorem *)
   unfold balance, list_of_full_tree.
   remember (Full.APL.of_list Leaf₁ singleton (fun x : A => x) l) as l' eqn:h.
-  destruct l' as [ x l' ]; simpl.
-  rewrite balance_powerlist_preserves_order.
+  destruct l' as [ [ | x ] l' ]; simpl.
+  { destruct l.
+    + easy.
+    + elimtype False.
+      destruct l'.
+      unfold APL.of_list in h; simpl in h.
+      set (l':=(BL.of_list l)) in *; clearbody l'.
+      clear -h.
+      induction l'; simpl in h;
+        try match goal with
+        | h: _ = APL.tpo _ ?l |- _ => destruct l; simpl in h
+        end;
+        inversion h.
+  }
+  rewrite loop_preserves_order.
   change (list_of_alternating_powerlist_n list_of_full_tree_n unit l')
-     with (list_of_alternating_powerlist list_of_full_tree_n unit ⟨fun n : nat => Full.APL.T (FullTree A 1) A n, x, l' ⟩).
+     with (list_of_alternating_powerlist list_of_full_tree_n unit ⟨S x, l'⟩).
+  change (Full.APL.T (FullTree A (S O)) A) with (fun n => Full.APL.T (FullTree A (S O)) A n).
   rewrite h.
   rewrite alternating_power_list_of_list_preserves_order with (h:=unit);
     [ | reflexivity .. ].

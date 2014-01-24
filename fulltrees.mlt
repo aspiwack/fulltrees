@@ -83,13 +83,14 @@ It remains to show how to transform a list of labels of length $n$ into an alter
 
 The balancing algorithm <#balance: 'a list -> 'a tree #> is thus given by:
 {display"<#let balance list = loop (complete list)#>"}
+(* arnaud: we will need to speak of how the position of the leaves in the alternating list does not matter, as it will change a little in the other sections *)
 "
 
 
 
 let ocaml = "{section"Removing partial functions" ~label:s_ocaml}
 
-The <#loop#> function of Section~{ref_ s_algo} relies on the invariant that the <#list#> argument has length $2^n-1$. In addition <#pass#> requires a non-empty list, using the fact that <#pass#> never returns an empty list, we can treat the empty list separately and enforce the common invariant that <#list#> has length $2^n-1$ for $n>0$. Finally, all the odd-position values must be of the form <#Tree t#>, whereas all the even positions must be of the form <#Elt x#>.
+The <#loop#> function of Section~{ref_ s_algo} relies on the invariant that the <#list#> argument has length $2^k-1$. Additionally, all the odd-position values must be of the form <#Tree t#>, whereas all the even positions must be of the form <#Elt x#>. If either of these invariants is broken, we would run into the <#assert false#> of <#pass#>.
 
 It is not immediately apparent that these properties hold. If it does not take a tremendous effort to convince oneself that the <#balance#> function of Section~{ref_ s_algo} is indeed correct, a direct mechanically checked proof would not be very practical.
 
@@ -97,24 +98,24 @@ It is not immediately apparent that these properties hold. If it does not take a
 
 Our goal in this section is to avoid resorting to <#assert false#>. In addition to making sure that <#balance#> indeed terminates with a value, it will make it considerably simpler to implement the balancing algorithm in Coq in Section~{ref_ s_coq}.
 To achieve this goal, it is necessary to have more precise types.
-Let us focus first on the length invariants: we will need to define a type which contains exactly the non-empty lists of length $2^n-1$.
+Let us focus first on the length invariants: we will need to define a type which contains exactly the non-empty lists of length $2^k-1$.
 
-A data structure which holds $2^n-1$ elements brings complete binary trees to mind. Even though it is possible -- though not necessary convenient -- to represent complete binary trees in Ocaml, they are not the appropriate structure. First, because complete binary trees are full trees and are, hence, unlikely to serve as a useful intermediate data structure to build a full tree. Second because there is a simpler -- albeit more exotic -- alternative.
-Indeed, let us consider the following recursive definition of $2^n-1$:
+A data structure which holds $2^k-1$ elements brings complete binary trees to mind. Even though it is possible -- though not necessary convenient -- to represent complete binary trees in Ocaml, they are not the appropriate structure. First, because complete binary trees are full trees and are, hence, unlikely to serve as a useful intermediate data structure to build a full tree. Second because there is a simpler -- albeit more exotic -- alternative.
+Indeed, let us consider the following recursive definition of $2^k-1$:
 {displaymath begin just_left `Brace (array [`L;`L;`L] [
-  array_line [$2^1-1$; $=$ ; $1$];
-  array_line [${exponent $2$ $n+1$}-1$; $=$; $2 {times} (2^n-1)+1$];
+  array_line [$2^0-1$; $=$ ; $0$];
+  array_line [${exponent $2$ $k+1$}-1$; $=$; $2 {times} (2^k-1)+1$];
 ]) end}
-Which is just a fancy way of saying that the $2^n-1$ are precisely those number which are written only with $1$-s in binary representation. In general, given a reasonable representation of (a subset of) the natural numbers, a corresponding structurally recursive definition of exponential can be deduced:
+Which is just a fancy way of saying that the $2^k-1$ are precisely those number which are written only with $1$-s in binary representation. In general, given a reasonable representation of (a subset of) the natural numbers, a corresponding structurally recursive definition of exponential can be deduced:
 {displaymath begin just_left `Brace (array [`L;`L;`L] [
-  array_line [exponent $a$ $2^1-1$; $=$ ; $a$];
-  array_line [exponent $a$ ${exponent $2$ $n+1$}-1$; $=$; $a{times}{exponent $(a^2)$ $2^n-1$}$];
+  array_line [exponent $a$ $2^0-1$; $=$ ; $1$];
+  array_line [exponent $a$ ${exponent $2$ $k+1$}-1$; $=$; $a{times}{exponent $(a^2)$ $2^k-1$}$];
 ]) end}
-If $a$ is read as a type, then $a^n$, is nothing but the type of lists of length $n$ filled with elements of $a$. Depending on the algorithm used to compute the exponential, one gets a different flavour of list. The standard linked lists correspond to the naïve algorithm ${exponent $a$ $n+1$}=a{times}a^n$, which is associated with the unary representation of numbers. Using the algorithm above, we restrict the lists to have length $2^n$ and the shape is more unusual. Generalising to an arbitrary $n$, we obtain the (non-uniformly recursive) datatype, which we shall call {emph"power lists"}:
+If $a$ is read as a type, then $a^n$, is nothing but the type of lists of length $n$ filled with elements of $a$. Depending on the algorithm used to compute the exponential, one gets a different flavour of list. The standard linked lists correspond to the naïve algorithm ${exponent $a$ $k+1$}=a{times}a^k$, which is associated with the unary representation of numbers. Using the algorithm above, we restrict the lists to have length $2^k$ and the shape is more unusual. Generalising to an arbitrary $k$, we obtain the (non-uniformly recursive) datatype, which we shall call {emph"power lists"}:
 {display"<#module PowerList = struct
 
   type 'a t =
-    | One of 'a
+    | Zero
     | TwicePlusOne of 'a * ('a*'a) t
 
 end#>"}
@@ -137,7 +138,7 @@ Just like with regular lists, there is a {emph"map"} function for power lists. D
 
   let rec map : 'a 'b. ('a->'b) -> 'a t -> 'b t = fun f l ->
     match l with
-    | One x -> One (f x)
+    | Zero -> Zero
     | TwicePlusOne (x,l) ->
         let f' (x,y) = f x , f y in
         TwicePlusOne ( f x , map f' l)
@@ -146,38 +147,41 @@ end#>"}
 
 {subsection"Alternation"}
 
-In Section~{ref_ s_algo}, we encode elements as singleton trees, relying on the <#root#> function to extract the value from the tree. If the invariant that even-position elements are actually singleton, <#root#> can fail if the applied to an empty tree, or lose elements if applied to a bigger tree.
+In Section~{ref_ s_algo}, labels are separated from trees dynamically. The <#pass#> function verifies that trees and labels are interleaved properly, and fails if they are not.
 
 In this section, instead, we consider a variant of <#'a PowerList.t#> where every odd position is a tree, and every even position an element. More generally, we define a type <#('odd,'even) AlternatingPowerList.t#> where odd positions have type <#'odd#>, and even positions have type <#'even#>. Such a list should have the following pattern:
 {itemize [
-  "<#['odd;('even,'odd);(('even,'odd),('even,'odd))#>";
+  "<#['odd;('even,'odd);(('even,'odd),('even,'odd))]#>";
 ]}
-After the first element, which must have type <#'odd#>, there is no difference between even and odd position: indeed, removing the first element, we actually have an <#('even*'odd) PowerList.t#>. Hence the definition:
+After the first element, which must have type <#'odd#>, there is no difference between even and odd positions: indeed, removing the first element, we actually have an <#('even*'odd) PowerList.t#>. Hence the definition:
 {display"<#module AlternatingPowerList = struct
+
   type ('odd,'even) t =
-    | One of 'odd
+    | Zero
     | TwicePlusOne of 'odd * ('even*'odd) PowerList.t
 
 end#>"}
 
-We can now define the main loop of our algorithm. The important remark is that in Section~{ref_ s_algo}, the elements are processed four by four: three are joined into a tree, and the last is left as a future root. After two constructors, the elements of an <#('odd,'even) AlternatingPowerList.t#> are grouped by four: an <#('odd,'even) AlternatingPowerList.t#> of length ${exponent $2$ $n+2$}-1$ is -- abusing notations a little -- of the form <#TwicePlusOne a (TwicePlusOne (b,c) l#>, where <#l#> has type <#(('even*'odd)*('even*'odd)) PowerList.t#>. As a consequence, the inner loop is essentially a <#PowerList.map#>.
 
-Writing <#PL#> and <#APL#> for <#PowerList#> and <#AlternatingPowerList#> respectively, we define the function <#pass:'a tree -> ('a*'a tree) PL.t -> ('a tree,'a) APL.t#>, which joins the trees in a list of length ${exponent $2$ $n+1$}-1$ (represented as the two arguments of the <#TwicePlusOne#> constructor), producing a list of length $2^n-1$, and the function <#balance_powerlist:('a tree,'a) APL.t -> 'a tree#> which iterates <#pass#> until there is a single tree left and returns it:
-{display"<#let pass t l =
-    match l with
-    | PL.One (a,s) -> APL.One (Node(t,a,s))
-    | PL.TwicePlusOne((a,s),l) ->
-        APL.TwicePlusOne ( Node(t,a,s) ,
-                           PL.map (fun ((a,t),(b,s)) -> a , Node(t,b,s) ) l )
+Using these alternating power lists, we can define an <#assert false#> free version of the <#pass#> function. Indeed, consider an alternating power list of length at least $3$: abusing the notations, it is of the form <#TwicePlusOne a (TwicePlusOne (b,c) l#>, where <#l#> has type <#(('even*'odd)*('even*'odd)) PowerList.t#>. The <#pass#> function of Section~{ref_ s_algo}, as it happens, manipulates its arguments by groups of four elements: basically, <#pass#> is simply a <#map#> over <#l#>.
 
-let rec balance_powerlist = function
-  | APL.One t -> t
-  | APL.TwicePlusOne (t,l) ->
-      balance_powerlist (pass t l)#>"}
+(* <#pass:'a tree -> ('a*'a tree) -> (('a*'a tree)*('a*'a tree)) PL.t -> ('a tree,'a) APL.t#> *)
+Writing <#PL#> and <#APL#> for <#PowerList#> and <#AlternatingPowerList#> respectively, we hence define the function <#pass#>
+which joins the trees in a list of length ${exponent $2$ $k+2$}-1${footnote"To ensure that its argument list has at least three elements, <#pass#> takes the three first elements as extra arguments. In other words <#pass t (x,s) l#> is meant to be read as <#pass (TwicePlusOne (t , TwicePlusOne ((x,s),l)))#>."}, producing a list of length ${exponent $2$$k+1$}-1$. The function <#loop#> is virtually unchanged from Section~{ref_ s_algo}, except it acts on power lists:
+{display"<#let pass t (x,s) l =
+    APL.TwicePlusOne (
+       Node (t,x,s) ,
+       PL.map (fun ((a,t),(b,s)) -> a , Node(t,b,s) ) l )
+
+let rec loop : 'e. ('e tree,'e) APL.t -> 'e tree = function
+  | APL.Zero -> Leaf
+  | APL.TwicePlusOne (t,PL.Zero) -> t
+  | APL.TwicePlusOne (t,PL.TwicePlusOne (xs,l)) ->
+      loop (pass t xs l)#>"}
 
 {subsection"Padding"}
 
-There is no partial function in the code of <#balance_powerlist#>, but we have not achieved our goal yet: we want to turn any list into a tree. Like in Section~{ref_ s_algo} we will use an initialisation phase, were we will pad our list with empty trees to reach a length of $2^n-1$. The output of this initialisation will be a <#('a tree,'a) APL.t#>.
+There is no partial function in the code of <#balance_powerlist#>, but we have not achieved our goal yet: we want to turn any list into a tree. Like in Section~{ref_ s_algo} we will use an initialisation phase, were we will pad our list with empty trees to reach a length of $2^k-1$. The output of this initialisation will be a <#('a tree,'a) APL.t#>.
 
 The heart of this section is a function which turns a non-empty list of <#'a#> into an <#('a*'a tree) PowerList.t#>. The final function, which produces an <#('a tree,'a) AlternatingPowerList.t#> is a thing wrapper around the former. The idea here is to represent the non-empty list in a way that makes its {emph"parity"} apparent. Such a type is <#('a*'a) list#>: the type of lists of even length. For a general list, there is a loose element (which we choose to be the first) when it has odd length, leading to the type <#'a option * ('a*'a) list#>. But the latter type may contains the empty list, to prevent this, we keep the {emph"two first"} apart when the list has even length, so our type of non-empty lists is <#'a eo * ('a*'a) list#>, where <#'a eo#> is the following type:
 {display"<#type 'a eo =
@@ -243,7 +247,7 @@ There is still a non-obvious property of the algorithm that the implementation o
 
 To that effect, we will use Coq rather than Ocaml. Even if it is possible, with some effort, to represent full trees and implement the algorithm in Ocaml -- and relatively easy in Haskell -- a Coq implementation also gives us termination by construction. Coq forces every recursion to be structural, which will prove to be rather entertaining.
 
-At a superficial level, a visible difference with the Ocaml implementation is that <#Powerlist.t#> and <#AlternatingPowerList.t#> must be decorated with the $n$ such that the length is $2^n-1$: it is the structural recursion parameter of the <@balance_powerlist@> function. Because it makes the code simpler, we will use a recursive definition rather than an inductive one:
+At a superficial level, a visible difference with the Ocaml implementation is that <#Powerlist.t#> and <#AlternatingPowerList.t#> must be decorated with the $k$ such that the length is $2^k-1$: it is the structural recursion parameter of the <@balance_powerlist@> function. Because it makes the code simpler, we will use a recursive definition rather than an inductive one:
 {display"<@Module PowerList.
 
   Fixpoint T (A:Type) (n:nat) :=
@@ -284,7 +288,7 @@ The algorithm indeed builds only full trees.
 
 {subsection"Structural initialisation"}
 
-The padding conversion from lists to lists of length $2^n-1$ is not structural, due to the use of <#pair_up#> in the recursive call. We will need another intermediate structure: it must be isomorphic to the type of list, but it must conform with the structure of <@PowerList.of_ne_list@>. That is, we want a datatype such that $"<@'a t@>"="<@'a eo * 'a t@>"$. As it turns out, this is a good definition, and it is a non-uniform datatype which corresponds to a numerical representation.
+The padding conversion from lists to lists of length $2^k-1$ is not structural, due to the use of <#pair_up#> in the recursive call. We will need another intermediate structure: it must be isomorphic to the type of list, but it must conform with the structure of <@PowerList.of_ne_list@>. That is, we want a datatype such that $"<@'a t@>"="<@'a eo * 'a t@>"$. As it turns out, this is a good definition, and it is a non-uniform datatype which corresponds to a numerical representation.
 
 Indeed, we can write any non-zero natural number in binary with digits $1$ and $2$ (but not $0$). In this system, for example, $8$ is represented as $112$. Here is the definition:
 {display"<@Module BinaryList.
