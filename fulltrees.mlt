@@ -304,7 +304,9 @@ To turn a non-empty list into a <@BinaryList.T@>, all we need is a function <@co
     | tpo b l => tpt a b l
     | tpt b c l => tpo a (cons (b,c) l)
     end
-  .@>"}
+  .
+
+End BinaryList.@>"}
 Note that while <@cons@> takes, in the worst case, logarithmic time with respect to the length of the list, building a list by repeatedly using <@cons@> is still linear. (*arnaud: guyslain should help me give a good explanation here. *)
 
 We also need a function which turns a <@T (A*A)@> into a <@T A@>. This is effectively multiplication by $2$. The lack of $0$ among the digits{footnote"The constructor <@zero@> represents an empty list of digits."} makes this process recursive. It is best understood as adding a $0$ at the end of the number, then eliminating the $0$ using the following equalities:
