@@ -26,24 +26,23 @@ module PowerList = struct
       system, we can use non-uniform inductive datatypes. Using the
       recursion that [2^(n+1)-1 = 2*(2^n-1)+1].
 
-      To read the ['a t] type, notice that there is always an element
-      available. It is the first (possibly unique) element of the
+      To read the ['a t] type, notice that if not [Zero], there is always an
+      element available. It is the first (possibly unique) element of the
       list. If there are other elements, then the next head is a pair
       [(b,c)]: the second and third elements. If there are still more
       elements, then the next head of head is a pair of pairs
-      [((d,e),(f,g))]: [d] is the fourth element, [e] the fifth, [f]
-      the sixth, and [g] the seventh. And so on. *)
+      [((d,e),(f,g))]: [d] is the fourth element, [e] the fifth, [f] the
+      sixth, and [g] the seventh. And so on. *)
   type 'a t =
     | Zero
     | TwicePlusOne of 'a * ('a*'a) t
 
   (** [map f l] is the functorial action of [f] on the powerlist [l]. *)
-  let rec map : 'a 'b. ('a->'b) -> 'a t -> 'b t = fun f l ->
-    match l with
+  let rec map : 'a 'b. ('a->'b) -> 'a t -> 'b t = fun f -> function
     | Zero -> Zero
-    | TwicePlusOne (x,l) ->
+    | TwicePlusOne (x,lst) ->
         let f' (x,y) = f x , f y in
-        TwicePlusOne ( f x , map f' l)
+        TwicePlusOne ( f x , map f' lst)
 
   (** [pair_up l] takes the non-empty list [l] and returns, if [l] has
       even length [Even a b,l'] where [(a,b)::l'] has consecutive
@@ -122,21 +121,23 @@ module PL = PowerList
 module APL = AlternatingPowerList
 
 
-(** [pass join t l] takes an alternating power list with at least
-    three elements, and groups the consecutive triplets using [Node]:
+(** [pass left pair apl] takes a tree, a pair of an element and a tree, 
+    and an alternating power list, (i.e. an alternating power list with
+    at least 3 elements), and groups the consecutive triplets using [Node]:
     the three first elements (of respective types ['o], ['e] and ['o])
     are joined, then for each group of four elements (of type
     [('e,'o),('e,'o)]) the first one is kept as such, and the three
     others can be joined. *)
 let pass : 'a. 'a tree -> ('a*'a tree) -> (('a*'a tree)*('a*'a tree)) PL.t -> ('a tree,'a) APL.t =
-  fun t (x,s) l ->
-    APL.TwicePlusOne ( Node (t,x,s) , PL.map (fun ((a,t),(b,s)) -> a , Node(t,b,s) ) l )
+  fun left (root,right) apl ->
+    APL.TwicePlusOne ( Node (left,root,right) , 
+		       PL.map (fun ((single,left),(root,right)) -> single , Node(left,root,right) ) apl )
 
 let rec loop : 'e. ('e tree,'e) APL.t -> 'e tree = function
   | APL.Zero -> Leaf
-  | APL.TwicePlusOne (t,PL.Zero) -> t
-  | APL.TwicePlusOne (t,PL.TwicePlusOne (xs,l)) ->
-      loop (pass t xs l)
+  | APL.TwicePlusOne (tree,PL.Zero) -> tree
+  | APL.TwicePlusOne (tree,PL.TwicePlusOne (pair,apl)) ->
+      loop (pass tree pair apl)
 
 let singleton x = Node(Leaf,x,Leaf)
 let balance l =
