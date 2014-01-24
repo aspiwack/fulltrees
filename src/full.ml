@@ -71,13 +71,13 @@ module PowerList = struct
       to be of the form [fun a -> (g x,d0)], effectively inserting
       [d0] after the current value. *)
   let rec of_list : 'a 'b. ('a->'b) -> ('a*'a->'b) -> 'a list -> 'b t =
-    fun d f l ->
-      let d' (x,y) = (d x , d y) in
-      let f' (x,y) = (f x , f y) in
-      match pair_up l with
+    fun pad coerce bits ->
+      let pad' (x,y) = (d x , d y) in
+      let coerce' (x,y) = (f x , f y) in
+      match pair_up bits with
       | Empty -> Zero
-      | Odd  (a ,l') -> TwicePlusOne ( d a  , of_list d' f' l' )
-      | Even (ab,l') -> TwicePlusOne ( f ab , of_list d' f' l' )
+      | Odd  (a ,pures) -> TwicePlusOne (pad a, of_list pad' coerce' pures)
+      | Even (ab,pures) -> TwicePlusOne (coerce ab, of_list pad' coerce' pures)
 
 end
 
