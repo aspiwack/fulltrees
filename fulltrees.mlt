@@ -231,7 +231,7 @@ With that function, we can conclude our implementation. Again writing <#PL#> and
     | a::l ->
         let pad x = id x , leaf in
         let coerce (x,y) = id x , up y in
-        TwicePlusOne (f a, PowerList.of_list pad coerce l)
+        TwicePlusOne (up a, PowerList.of_list pad coerce l)
 
 end
 

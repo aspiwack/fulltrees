@@ -105,12 +105,12 @@ module AlternatingPowerList = struct
   (** We build an [('odd,'even) t] from an ['a list] using a default
       ['odd] value for padding, a function [f:'a -> 'odd] for odd
       positions, and [g:'a -> 'even] for even positions. *)
-  let of_list d f g = function
+  let of_list leaf up id = function
     | [] -> Zero
     | a::l ->
-        let d' x = g x , d in
-        let fg (x,y) = g x , f y in
-        TwicePlusOne (f a , PowerList.of_list d' fg l)
+        let pad x = id x , leaf in
+        let coerce (x,y) = id x , up y in
+        TwicePlusOne (up a , PowerList.of_list pad coerce l)
 
 end
 
