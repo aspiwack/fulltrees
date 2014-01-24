@@ -133,9 +133,7 @@ Elements appear in order, like in a regular list, but they are packed twice as t
 
 Just like with regular lists, there is a {emph"map"} function for power lists. Due to the non-uniformity it is a little trickier{footnote"The type annotation on <#PowerList.map#> informs Ocaml that <#map#> is a non-uniform recursive function. Without the type annotation, Ocaml simply assumes that <#map#> is uniformly recursive and fails to typecheck since <#f#> and <#f'#> have different types."} than the regular list map: in the recursive steps, the argument function <#f#> needs to process two consecutive elements at a time.
 {display"<#module PowerList = struct
-
   #{module_elipsis}#
-
   let rec map : 'a 'b. ('a->'b) -> 'a t -> 'b t = fun f -> function
     | Zero -> Zero
     | TwicePlusOne (elt,lst) ->
@@ -205,10 +203,7 @@ At any recursive step, suppose first that the number of bits of weight $2^k$ is 
 
 The last difficulty is that <#pad#> and <#coerce#> both depend on the current weight of the bits, hence we need to update them at each recursive step. <#pad#> must add leaves between every two consecutive labels, in even positions, while <#coerce#> must upgrade every even-position label into a tree of height one. This leads to the following definition:
 {display"<#module PowerList = struct
-
   #{module_elipsis}#
-
-  
   let rec of_list : 'a 'b. ('a->'b) -> ('a*'a->'b) -> 'a list -> 'b t =
     fun pad coerce bits ->
       let pad' (x,y) = (pad x, pad y) in
@@ -222,9 +217,7 @@ With that function, we can conclude our implementation. Again writing <#PL#> and
 (* arnaud: we probably don't need most of thie sentence now. *)
 
 {display"<#module AlternatingPowerList = struct
-
   #{module_elipsis}#
-
   let of_list leaf up id = function
     | [] -> Zero
     | a::l ->
@@ -260,9 +253,7 @@ At a superficial level, a visible difference with the Ocaml implementation is th
 End PowerList.@>"}
 We will also need a version where <@k@> can be arbitrary. For that purpose we use Coq's type of dependent pairs <@{ n:nat & F n}@>. The constructor for dependent pairs is written <@⟨ n , x ⟩@>. The implicit version comes with constructors -- <@tpo@> stands for ``twice plus one'':
 {display"<@Module PowerList.
-
   @{module_elipsis}@
-
   Definition U (A:Type) := { k:nat & T A k }.
   Definition zero {A:Type} : U A := ⟨ 0 , tt ⟩.
   Definition tpo {A:Type} (a:A) (l:U (A*A)) : U A :=
@@ -306,9 +297,7 @@ End BinaryList.@>"}
 
 To turn a non-empty list into a <@BinaryList.T@>, all we need is a function <@cons : A -> T A -> T A@> to add an element in front of the list. On the numerical representation side, it corresponds to adding $1$. It behaves like adding $1$ in the usual binary representation, except that $1$-s are turned into $2$-s without a carry and $2$-s into $1$-s while producing a carry:
 {display"<@Module BinaryList.
-
   @{module_elipsis}@
-
   Fixpoint cons {A} (a:A) (l:T A) : T A :=
     match l with
     | zero => tpo a zero
@@ -326,9 +315,7 @@ We also need a function which turns a <@T (A*A)@> into a <@T A@>. This is effect
 ]) end}
 In terms of binary lists:
 {display"<@Module BinaryList.
-
   @{module_elipsis}@
-
   Fixpoint twice {A} (l:T (A*A)) : T A :=
     match l with
     | zero => zero
@@ -341,9 +328,7 @@ End BinaryList.@>"}
 
 We can now write a structurally recursive padding function, using binary lists as the structural argument. As we do not know in advance the length of the produced list, a <@PowerList.U@> is returned. We write <@BL@> as a shorthand for <@BinaryList@>:
 {display"<@Module PowerList.
-
   @{module_elipsis}@
-
   Fixpoint of_binary_list {A X} (d:A->X) (f:A*A->X) (l:BL.T A) : U X :=
     match l with
     | BL.zero => zero
@@ -359,9 +344,7 @@ Where <@g×f@> is the function which maps <@(x,y)@> to <@(g x,f y)@>.
 
 The rest follows straightforwardly, and we can define the following functions which conclude the algorithm (<@BL@>, <@PL@>, and <@APL@> stand for <@BinaryList@>, <@PowerList@>, and <@AlternatingPowerList@> respectively):
 {display"<@Module AlternatingPowerList.
-
   @{module_elipsis}@
-
   Definition of_binary_list {A Odd Even} (d:Odd) (f:A->Odd) (g:A->Even) (l:BL.T A) : U Odd Even.
 
   Definition of_list {A Odd Even} (d:Odd) (f:A->Odd) (g:A->Even) (l:list A) : U Odd Even.
