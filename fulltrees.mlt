@@ -238,33 +238,32 @@ The final function, <#balance:'a list -> 'a tree#>, implements the same algorith
 
 let coq = "{section"Turning to Coq" ~label:s_coq}
 
-There is still a non-obvious property of the algorithm that the implementation of Section~{ref_ s_ocaml} does not make obvious: that the algorithm actually does build {emph"full"} trees. In this section we shall build into the type of <@balance@> that its output is indeed full.
+There is still a property of the algorithm that the implementation of Section~{ref_ s_ocaml} does not make obvious: that the algorithm actually does build {emph"full"} trees. In this section we shall build into the type of <@balance@> that its output is indeed full.
 
 To that effect, we will use Coq rather than Ocaml. Even if it is possible, with some effort, to represent full trees and implement the algorithm in Ocaml -- and relatively easy in Haskell -- a Coq implementation also gives us termination by construction. Coq forces every recursion to be structural, which will prove to be rather entertaining.
 
 At a superficial level, a visible difference with the Ocaml implementation is that <#Powerlist.t#> and <#AlternatingPowerList.t#> must be decorated with the $k$ such that the length is $2^k-1$: it is the structural recursion parameter of the <@balance_powerlist@> function. Because it makes the code simpler, we will use a recursive definition rather than an inductive one:
+(* arnaud: if we keep the part of exponentiation, we should have a remark here that this definition of powerlist is exactly the exponentiation algorithms *)
 {display"<@Module PowerList.
 
-  Fixpoint T (A:Type) (n:nat) :=
-    match n with
-    | 0 => A
-    | S n' => (A * T (A*A) n')%type
+  Fixpoint T (A:Type) (k:nat) :=
+    match k with
+    | 0 => unit:Type
+    | S k' => (A * T (A*A) k')%type
     end
   .
 
 End PowerList.@>"}
-We will also need a version where the height is kept implicit. For that purpose we use Coq's type of dependent pairs <@{ n:nat & F n}@>. The constructor for dependent pairs is written <@⟨ F , n , x ⟩@>. The implicit version comes with constructors -- <@tpo@> stands for ``twice plus one'':
+We will also need a version where <@k@> can be arbitrary. For that purpose we use Coq's type of dependent pairs <@{ n:nat & F n}@>. The constructor for dependent pairs is written <@⟨ n , x ⟩@>. The implicit version comes with constructors -- <@tpo@> stands for ``twice plus one'':
 {display"<@Module PowerList.
 
   @{module_elipsis}@
 
-  Definition U (A:Type) := { n:nat & T A n }.
-  Definition one {A:Type} (a:A) : U A := ⟨ T A , 0 , a ⟩.
+  Definition U (A:Type) := { k:nat & T A k }.
+  Definition zero {A:Type} : U A := ⟨ 0 , tt ⟩.
   Definition tpo {A:Type} (a:A) (l:U (A*A)) : U A :=
-    let '(existT n  l) := l in
-    ⟨ T A , S n , (a,l) ⟩.
-
-End PowerList.@>"}
+    let '⟨k,l⟩ := l in
+    ⟨ S k , (a,l) ⟩.@>"}
 The definition of <@AlternatingPowerList.T@> and <@AlternatingPowerList.U@> are similar.
 
 {subsection"Full trees"}
@@ -273,51 +272,53 @@ To code full trees, we index trees by their height, and specify that leaves can 
 {display"<@Inductive FullTree (A:Type) : nat -> Type :=
   | Leaf₀ : FullTree A 0
   | Leaf₁ : FullTree A 1
-  | Node {n:nat} : FullTree A n -> A -> FullTree A n -> FullTree A (S n)
+  | Node {k:nat} : FullTree A k -> A -> FullTree A k -> FullTree A (S k)
 .@>"}
 
-With this modification, the functions <@pass@> and <@balance_powerlist@> are virtually unmodified with respect to Section~{ref_ s_ocaml}. Only their types change to reflect the extra information:
-{display"<@Definition pass {A n p} : APL.T (FullTree A (S p)) A (S n) -> APL.T (FullTree A (S (S p))) A n.
-Fixpoint balance_powerlist {A n p} : APL.T (FullTree A (S p)) A n -> FullTree A (plus n (S p)) {struct n}.@>"}
+With this modification, the functions <@pass@> and <@balance_powerlist@> are virtually unmodified{footnote
+"In fact, as can be seen from its type, <@loop@> only handles non-empty alternating power lists. This is due to a small technicality: the recursive step of <@loop@> is in the case <@S (S k@>, but Coq does not recognise <@S k@> as a structural subterm of <@S (S k)@>, so the definition from Section~{ref_ s_ocaml} does not verifies Coq's structural recursion criterion. As a workaround, the empty case is moved to the <@balance@> function."
+} with respect to Section~{ref_ s_ocaml}. Only their types change to reflect the extra information:
+{display"<@Definition pass {A k p} :
+     APL.T (FullTree A (S p)) A (S (S k)) -> APL.T (FullTree A (S (S p))) A (S k).
+Fixpoint loop {A k p} :
+     APL.T (FullTree A (S p)) A (S k) -> FullTree A (plus k (S p)) {struct k}.@>"}
 The algorithm indeed builds only full trees.
 
 {subsection"Structural initialisation"}
 
-The padding conversion from lists to lists of length $2^k-1$ is not structural, due to the use of <#pair_up#> in the recursive call. We will need another intermediate structure: it must be isomorphic to the type of list, but it must conform with the structure of <@PowerList.of_ne_list@>. That is, we want a datatype such that $"<@'a t@>"="<@'a eo * 'a t@>"$. As it turns out, this is a good definition, and it is a non-uniform datatype which corresponds to a numerical representation.
+The padding conversion from lists to power lists, in Section~{ref_ s_ocaml}, is not structural due to the use of <#pair_up#> in the recursive call. To tackle this recursion, we shall make use of another intermediate structure. What we need, essentially, is that all the calls to <#pair_up#> are pre-calculated, so the intermediate structure will be like <#parity#> except that the calls to <#('a*'a) list#> are replaced by calls to <#('a*'a) parity#>.
 
-Indeed, we can write any non-zero natural number in binary with digits $1$ and $2$ (but not $0$). In this system, for example, $8$ is represented as $112$. Here is the definition:
+As it turns out, this is another non-uniform datatype which corresponds to a numerical representation. Indeed, we can write any natural number in binary with digits $1$ and $2$ (but not $0$). In this system, for example, $8$ is represented as $112$. Here is the definition:
+(* arnaud: either explain that tpt stands for twice plus two, or change the name altogether *)
 {display"<@Module BinaryList.
 
   Inductive T (A:Type) : Type :=
-  | one (a:A)
-  | two (a b:A)
+  | zero
   | tpo (a:A) (l:T (A*A))
   | tpt (a b: A) (l:T (A*A))
   .
 
 End BinaryList.@>"}
 
-To turn a non-empty list into a <@BinaryList.T@>, all we need is a function <@cons:A -> T A -> T A@> to add an element in front of the list. On the numerical representation side, it corresponds to adding $1$. It behaves like adding $1$ in the usual binary representation, except that $1$-s are turned into $2$-s without a carry and $2$-s into $1$-s while producing a carry:
+To turn a non-empty list into a <@BinaryList.T@>, all we need is a function <@cons : A -> T A -> T A@> to add an element in front of the list. On the numerical representation side, it corresponds to adding $1$. It behaves like adding $1$ in the usual binary representation, except that $1$-s are turned into $2$-s without a carry and $2$-s into $1$-s while producing a carry:
 {display"<@Module BinaryList.
 
   @{module_elipsis}@
 
   Fixpoint cons {A} (a:A) (l:T A) : T A :=
     match l with
-    | one b => two a b
-    | two b c => tpo a (one (b,c))
+    | zero => tpo a zero
     | tpo b l => tpt a b l
     | tpt b c l => tpo a (cons (b,c) l)
     end
-  .
-
-End BinaryList.@>"}
+  .@>"}
 Note that while <@cons@> takes, in the worst case, logarithmic time with respect to the length of the list, building a list by repeatedly using <@cons@> is still linear. (*arnaud: guyslain should help me give a good explanation here. *)
 
-We also need a function which turns a <@T (A*A)@> into a <@T A@>. This is effectively multiplication by $2$. The lack of $0$ among the digits makes this process recursive:
-{displaymath begin just_left `Brace (array [`L;`L;`L] [
+We also need a function which turns a <@T (A*A)@> into a <@T A@>. This is effectively multiplication by $2$. The lack of $0$ among the digits{footnote"The constructor <@zero@> represents an empty list of digits."} makes this process recursive. It is best understood as adding a $0$ at the end of the number, then eliminating the $0$ using the following equalities:
+{displaymath begin just_left `Brace (array [`C;`L;`C] [
+  array_line [$0$   ; $=$ ; cdot ];
   array_line [$x20$ ; $=$ ; $x12$];
-  array_line [$x10$ ; $=$; $x02$];
+  array_line [$x10$ ; $=$ ; $x02$];
 ]) end}
 In terms of binary lists:
 {display"<@Module BinaryList.
@@ -326,8 +327,7 @@ In terms of binary lists:
 
   Fixpoint twice {A} (l:T (A*A)) : T A :=
     match l with
-    | one (a,b) => two a b
-    | two (a,b) cd => tpt a b (one cd)
+    | zero => zero
     | tpo (a,b) l => tpt a b (twice l)
     | tpt (a,b) cd l => tpt a b (tpo cd l)
     end
@@ -335,15 +335,14 @@ In terms of binary lists:
 
 End BinaryList.@>"}
 
-We can now write a structurally recursive <#PowerList.of_ne_list#>, using binary lists as the structural argument. Notice that, as we do not know in advance the length of the produced list, a <@PowerList.U@> is returned:
+We can now write a structurally recursive padding function, using binary lists as the structural argument. As we do not know in advance the length of the produced list, a <@PowerList.U@> is returned. We write <@BL@> as a shorthand for <@BinaryList@>:
 {display"<@Module PowerList.
 
   @{module_elipsis}@
 
   Fixpoint of_binary_list {A X} (d:A->X) (f:A*A->X) (l:BL.T A) : U X :=
     match l with
-    | BL.one a => one (d a)
-    | BL.two a b => one (f (a,b))
+    | BL.zero => zero
     | BL.tpo a l =>
       tpo (d a) (of_binary_list (d×d) (f×f) l)
     | BL.tpt a b l =>
@@ -366,7 +365,7 @@ The rest follows straightforwardly, and we can define the following functions wh
 End AlternatingPowerList.
 
 
-Definition balance {A:Type} (l:list A) : { n:nat & FullTree A n }.@>"}
+Definition balance {A:Type} (l:list A) : { k:nat & FullTree A k }.@>"}
 "
 
 let concl = "{section"Conclusion"}
@@ -382,7 +381,7 @@ The missing piece is to prove that the infix traversal of <@balance l@> is indee
   end
 .
 
-Definition list_of_full_tree {A} (t:{ n:nat & FullTree A n }) : list A :=
+Definition list_of_full_tree {A} (t:{ k:nat & FullTree A k }) : list A :=
   list_of_full_tree_n (projT2 t)
 .@>"}
 We can then state the theorem:
