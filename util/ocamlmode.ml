@@ -52,6 +52,8 @@ let to_greek = function
 
 let ocaml_code x =
   Melt.Verbatim.regexps [
+    Str.regexp "[\n]\\([ ]*[\n]\\)+",
+      (fun _ -> Latex.newline_size (`Baselineskip 0.5));
     Str.regexp "\034\\([\\]\034\\|[^\034]\\)*\034",
       (fun s -> texttt (Latex.Verbatim.verbatim s));
     Str.regexp "(\\*\\([^*]\\|\\*[^)]\\)*\\*)",
