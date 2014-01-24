@@ -116,10 +116,14 @@ let whitespaces =
   Str.regexp "[ \n]",
   Latex.Verbatim.verbatim
 
+let blanklines =
+  Str.regexp"[\n]\\([ ]*[\n]\\)+",
+  (fun _ -> Latex.newline_size (`Baselineskip 0.5))
+
 let rec print n x = 
   assert (!n>=0);
   if !n = 0 then
-    Latex.Verbatim.regexps ((open_comments n)::calletters::idents::symbols) else_apply x
+    Latex.Verbatim.regexps (blanklines::(open_comments n)::calletters::idents::symbols) else_apply x
   else
     Latex.Verbatim.regexps [open_comments n ; close_comments n; whitespaces ] (fun s -> itshape(text s)) x
 
