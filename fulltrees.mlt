@@ -247,8 +247,7 @@ At a superficial level, a visible difference with the Ocaml implementation is th
     match k with
     | 0 => unit:Type
     | S k' => (A * T (A*A) k')%type
-    end
-  .
+    end.
 
 End PowerList.@>"}
 We will also need a version where <@k@> can be arbitrary. For that purpose we use Coq's type of dependent pairs <@{ n:nat & F n}@>. The constructor for dependent pairs is written <@⟨ n , x ⟩@>. The implicit version comes with constructors -- <@tpo@> stands for ``twice plus one'':
@@ -267,8 +266,7 @@ To code full trees, we index trees by their height, and specify that leaves can 
 {display"<@Inductive FullTree (A:Type) : nat -> Type :=
   | Leaf₀ : FullTree A 0
   | Leaf₁ : FullTree A 1
-  | Node {k:nat} : FullTree A k -> A -> FullTree A k -> FullTree A (S k)
-.@>"}
+  | Node {k:nat} : FullTree A k -> A -> FullTree A k -> FullTree A (S k).@>"}
 
 With this modification, the functions <@pass@> and <@balance_powerlist@> are virtually unmodified{footnote
 "In fact, as can be seen from its type, <@loop@> only handles non-empty alternating power lists. This is due to a small technicality: the recursive step of <@loop@> is in the case <@S (S k@>, but Coq does not recognise <@S k@> as a structural subterm of <@S (S k)@>, so the definition from Section~{ref_ s_ocaml} does not verifies Coq's structural recursion criterion. As a workaround, the empty case is moved to the <@balance@> function."
@@ -290,8 +288,7 @@ As it turns out, this is another non-uniform datatype which corresponds to a num
   Inductive T (A:Type) : Type :=
   | zero
   | tpo (a:A) (l:T (A*A))
-  | tpt (a b: A) (l:T (A*A))
-  .
+  | tpt (a b: A) (l:T (A*A)).
 
 End BinaryList.@>"}
 
@@ -303,8 +300,7 @@ To turn a non-empty list into a <@BinaryList.T@>, all we need is a function <@co
     | zero => tpo a zero
     | tpo b l => tpt a b l
     | tpt b c l => tpo a (cons (b,c) l)
-    end
-  .
+    end.
 
 End BinaryList.@>"}
 Note that while <@cons@> takes, in the worst case, logarithmic time with respect to the length of the list, building a list by repeatedly using <@cons@> is still linear. (*arnaud: guyslain should help me give a good explanation here. *)
@@ -323,8 +319,7 @@ In terms of binary lists:
     | zero => zero
     | tpo (a,b) l => tpt a b (twice l)
     | tpt (a,b) cd l => tpt a b (tpo cd l)
-    end
-  .
+    end.
 
 End BinaryList.@>"}
 
@@ -338,8 +333,7 @@ We can now write a structurally recursive padding function, using binary lists a
       tpo (d a) (of_binary_list (d×d) (f×f) l)
     | BL.tpt a b l =>
       tpo (f (a,b)) (of_binary_list (d×d) (f×f) l)
-    end
-  .
+    end.
 
 End PowerList.@>"}
 Where <@g×f@> is the function which maps <@(x,y)@> to <@(g x,f y)@>.
@@ -367,12 +361,10 @@ The missing piece is to prove that the infix traversal of <@balance l@> is indee
   | Leaf₀ => []
   | Leaf₁ => []
   | Node _ t₁ x t₂ => list_of_full_tree_n t₁ ++ [x] ++ list_of_full_tree_n t₂
-  end
-.
+  end.
 
 Definition list_of_full_tree {A} (t:{ k:nat & FullTree A k }) : list A :=
-  list_of_full_tree_n (projT2 t)
-.@>"}
+  list_of_full_tree_n (projT2 t).@>"}
 We can then state the theorem:
 {display"<@Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l.@>"}
 
