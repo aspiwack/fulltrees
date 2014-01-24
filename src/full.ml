@@ -58,7 +58,8 @@ module PowerList = struct
       | Empty -> Odd (elt , [])
       | Odd (b,l') -> Even ((elt,b) , l')
       | Even (bc,l') -> Odd (elt , bc::l')
-    in List.fold_right succ l Empty
+    in
+    List.fold_right succ l Empty
 
   (** Given a casting function ['a->'b], we can construct an ['a t]
       from a non-empty ['a list] of any size (here represented as an

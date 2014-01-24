@@ -182,29 +182,28 @@ let rec loop : 'e. ('e tree,'e) APL.t -> 'e tree = function
 
 Now that there is no more <#assert false#> in the code of <#loop#>, we need to change the <#complete#> function of Section~{ref_ s_algo} so that it returns an <#('a tree,'a) APL.t#> rather than a list. The heart of this section is a function which turns an <#'a list#> into an <#('a*'a tree) PL.t#>. The final function, which produces an <#('a tree,'a) APL.t#> is a simple wrapper around the former.
 
-We want to turn a list <#lst#> of length $n+1$ into a pair of its first element, converted into a tree, plus a power list of length $2{times}(2^k-1){geqslant} n$ representing its tail <#tail#>. Each element of the power list is a pair, whose first term is an element, and the second term is a tree of height at most one. In particular, the returned power list always has always an even length, so if <#tail#> has odd length, we will need to insert at least a <#Leaf#>. This suggests that we may inspect the parity of the length of <#lst#>, and insert an extra element precisely when it is odd. This leads to a slightly different padding procedure than that of Section~{ref_ s_algo}, in particular the leaves are not inserted at the same position, but it is inconsequential.
+We want to turn a list <#lst#> of length $n+1$ into a pair of its first element, converted into a tree, plus a power list of length $2{times}(2^k-1){geqslant} n$ representing its tail <#tail#>. Each element of the power list is a pair, whose first term is an element, and the second term is a tree of height at most one. In particular, the length of the returned power list is always even, so if <#tail#> has odd length, we will need to insert at least a <#Leaf#>. This suggests that we may inspect the parity of the length of <#tail#>, and insert an extra element precisely when it is odd. This leads to a slightly different padding procedure than that of Section~{ref_ s_algo}, in particular the leaves are not inserted at the same position, but it is inconsequential.
 
-An <#'a list#> of even length can be turned into an <#('a*'a) list#> whose length is halved. This turns out to be interesting for our recursion, since it mimics the inductive step of power lists. Also, in the case of even length, we need to distinguish the empty case from the non-empty case: the former will be turned into the empty power list <#APL.Zero#> while the latter will be turned into a power list of the form <#APL.TwicePlusOne((x,y),l)#>, where <#x#> and <#y#> correspond to the two elements of <#lst#>. These different cases are represented in the following view:
+An <#'a list#> of even length can be turned into an <#('a*'a) list#> whose length is halved. This turns out to be interesting for our recursion, since it mimics the inductive step of power lists. Also, in the case of even length, we need to distinguish the empty case from the non-empty case: the former will be turned into the empty power list <#APL.Zero#> while the latter will be turned into a power list of the form <#APL.TwicePlusOne((x,y),l)#>, where <#x#> and <#y#> correspond to the two first elements of <#tail#>. These different cases are represented in the following view:
 {display"<#type 'a parity =
   | Empty
   | Odd of 'a * ('a*'a) list
   | Even of ('a*'a) * ('a*'a) list
 
-  let pair_up lst =
-    let succ elt = function
-      | Empty -> Odd (elt, [])
-      | Odd (b,pairs) -> Even ((elt,b), pairs)
-      | Even (bc,pairs) -> Odd (elt, bc::pairs)
-    in List.fold_right succ lst Empty
-#>"}
+let pair_up lst =
+  let succ elt = function
+    | Empty -> Odd (elt, [])
+    | Odd (b,pairs) -> Even ((elt,b), pairs)
+    | Even (bc,pairs) -> Odd (elt, bc::pairs)
+  in List.fold_right succ lst Empty#>"}
 
-The padding function itself, <#of_list#>, is at first-sight far from intuitive. Let's recall that we want to turn a list of labels of arbitrary length, into a power list of pairs. A label can be thought of as a bit of weight $2^0$, while a pair of labels would be a bit of weight $2^1$, and so on. At first, all our bits have weight $2^0$ and consists in one label each. We can made up bits of higher weight by pairing two bits of the same weight. A bit made up only of labels is called {emph"pure"}. We can also double the weight of a bit by adding leaves into it (with the function <#pad#>), but this gives a bit made of pairs of labels and trees, call them {emph"impure"}. Lastly we can also transmute a pure bit into an impure bit of the same weight (with the function <#coerce#>), by replacing odd-position labels into trees of height one.
+The padding function itself, <#of_list#>, is at first-sight far from intuitive. Let's recall that we want to turn a list of labels of arbitrary length, into a power list of pairs. A label can be thought of as a bit of weight $2^0$, while a pair of labels would be a bit of weight $2^1$, and so on. At first, all our bits have weight $2^0$ and consists in one label each. We can build bits of higher weight by pairing up two bits of the same weight. A bit made up only of labels is called {emph"pure"}. We can also double the weight of a bit by interleaving leaves into it (with the function <#pad#>), but this gives a bit made of pairs of labels and trees, call them {emph"impure"}. Lastly, we can also transmute a pure bit into an impure bit of the same weight (with the function <#coerce#>), by replacing odd-position labels by trees of height one.
 
-Each recursive step is to take a list of pure bits of the same weight $2^k$, and to output exactly one impure bit of size ${exponent $2$ $k+1$}$, plus a list of pure bits of weight ${exponent $2$ $k+1$}$, on which we recurse. Indeed as we want a power list of pairs, we thus obtain one bit of each weight from $2^1$ to $2^l$, for some $l$, encoding a list of length ${exponent $2$ $l+1$} - 2$, as expected.
+Each recursive step consists in taking a list of pure bits of the same weight $2^k$, and to outputing exactly one impure bit of size ${exponent $2$ $k+1$}$, plus a list of pure bits of weight ${exponent $2$ $k+1$}$, which is converted recursively. We thus obtain, successively, one bit of each weight from $2^1$ to $2^l$, for some $l$, encoding a list of length ${exponent $2$ $l+1$} - 2$, as expected.
 
-At any recursive step, suppose first that the number of bits of weight $2^k$ is odd. As we need to compute only bits of weight ${exponent $2$ $k+1$}$, one of them impure, we are forced to use <#pad#> on one bit, and to pair the others. Suppose now that the number of bits of weight $2^k$ is even. In that case, we can pair them all into bits of size ${exponent $2$ $k+1$}$, and then use <#coerce#> on one of them to make an impure bit to output.
+At any recursive step, suppose first that the number of bits of weight $2^k$ is odd. As we need to compute only bits of weight ${exponent $2$ $k+1$}$, one of them impure, we are forced to use <#pad#> on one bit, and to pair up the others. Suppose now that the number of bits of weight $2^k$ is even. In that case, we can pair them all into bits of weight ${exponent $2$ $k+1$}$, and then use <#coerce#> on one of them to make the impure bit.
 
-The last difficulty is that <#pad#> and <#coerce#> both depend on the current weight of the bits, hence we need to update them at each recursive step. <#pad#> must add leaves between every two consecutive labels, in even positions, while <#coerce#> must upgrade every even-position label into a tree of height one. This leads to the following code:
+The last difficulty is that <#pad#> and <#coerce#> both depend on the current weight of the bits, hence we need to update them at each recursive step. <#pad#> must add leaves between every two consecutive labels, in even positions, while <#coerce#> must upgrade every even-position label into a tree of height one. This leads to the following definition:
 {display"<#module PowerList = struct
 
   #{module_elipsis}#
