@@ -36,13 +36,15 @@ In Sections~{ref_ s_ocaml} and~{ref_ s_coq} we show refinements of the algorithm
 
 let algo = "{section"A balancing algorithm" ~label:s_algo}
 
-We start by giving a first, almost naive, implementation of the balancing algorithm. The heart of the algorithm relies on using an alternating list of length ${exponent $2$ $k$}-1$, where odd-position elements are trees and even-position elements are labels, of type <#'a#>. Though we could encode labels as trees of height one, we rather use an appropriate type for sake of readability:
+We start by giving a first, almost naive, implementation of the balancing algorithm. The heart of the algorithm relies on using an alternating list of length ${exponent $2$ $k$}-1$, where odd-position elements are trees and even-position elements are labels, of type <#'a#>.  A full tree can be decomposed into the first $k-1$ levels, containing ${exponent $2$ $k-1$} -1$ internal nodes, and the $k$th level, which contains nodes or leaves. Thus, the ${exponent $2$ $k-1$} - 1$ labels in the alternating list will be used to label the internal nodes in the $k-1$ first levels of the balanced tree, while the ${exponent $2$ $k-1$}$ trees, all of height at most one at first, will be pending at the level $k$.
+
+Though we could encode labels as trees of height one in the alternating list, we rather use an appropriate type for the sake of readability:
 
 {display"<#type 'a tree_or_elt =
 | Elt of 'a
 | Tree of 'a tree#>"}
 
-We decompose the problem into two parts: computing an alternating list of length ${exponent $2$ $k$} - 1$ from an arbitrary list of labels, and then transforming this alternating list into a balanced tree. A full tree can be decomposed into the first $k-1$ levels, containing ${exponent $2$ $k-1$} -1$ internal nodes, and the $k$th level, which contains nodes or leaves. Thus, the ${exponent $2$ $k-1$} - 1$ labels in the alternating list will be used to label the internal nodes in the $k-1$ first levels of the balanced tree, while the ${exponent $2$ $k-1$}$ trees, all of height at most one, will be pending at the last level. We first show how to solve the second part: turning an alternating list into a full tree.
+We decompose the problem into two parts: computing an alternating list of length ${exponent $2$ $k$} - 1$ from an arbitrary list of labels, and then transforming this alternating list into a balanced tree. We first show how to solve the second part: turning an alternating list into a full tree.
 
 Given an alternating list <#lst#>, by pairing the trees in <#lst#> using only one traversal of the list, we obtain an alternating list with exactly half as many trees. Each pairing requires two trees and one label used as a root. In order to build a list that is alternated, we also need a second label, that is kept as a single element. This explains why we consider at each step the four first elements of the list.
 
@@ -80,7 +82,7 @@ It remains to show how to transform a list of labels of length $n$ into an alter
 #>"}
 
 The balancing algorithm <#balance: 'a list -> 'a tree #> is thus given by:
-{display"<#let balance list = loop (complete  list)#>"}
+{display"<#let balance list = loop (complete list)#>"}
 "
 
 
