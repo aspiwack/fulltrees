@@ -90,7 +90,7 @@ The balancing algorithm <#balance: 'a list -> 'a tree #> is thus given by:
 
 let ocaml = "{section"Removing partial functions" ~label:s_ocaml}
 
-The <#loop#> function of Section~{ref_ s_algo} relies on the invariant that the <#list#> argument has length $2^k-1$. Additionally, all the odd-position values must be of the form <#Tree t#>, whereas all the even positions must be of the form <#Elt x#>. If either of these invariants is broken, we would run into the <#assert false#> of <#pass#>.
+The <#loop#> function of Section~{ref_ s_algo} relies on the invariant that the <#list#> argument has length $2^k-1$. Additionally, all the odd-position values must be of the form <#Tree t#>, whereas all the even-position values must be of the form <#Elt x#>. If either of these invariants is broken, we would run into the <#assert false#> of <#pass#>.
 
 It is not immediately apparent that these properties hold. If it does not take a tremendous effort to convince oneself that the <#balance#> function of Section~{ref_ s_algo} is indeed correct, a direct mechanically checked proof would not be very practical.
 
@@ -120,7 +120,7 @@ If $a$ is read as a type, then $a^n$, is nothing but the type of lists of length
 
 end#>"}
 
-The correspondence between flavours of lists and numerical representation goes back to Guibas \& al. in~{cite"Guibas1977"} and is pushed further by Myers in~{cite"Myers1983"}. A thorough exploration of the correspondence, is conducted by Okasaki in~{cite"Okasaki1999"}(*arnaud: add relevant chapters*) where he introduces the idea of using non-uniform inductive datatypes in the context of numerical representations. As a matter of fact, the type of power lists actually appears in~{cite"Okasaki1999"} as a pedagogical introduction to non-uniformly recursive lists. Relatedly, Okasasi uses, in~{cite"Okasaki1999a"}, a non-uniform recursive datatype to devise a type containing only square matrices, it is also based on numerical representations but uses a tail-recursive exponentiation.
+The correspondence between flavours of lists and numerical representation goes back to Guibas \& al. in~{cite"Guibas1977"} and is pushed further by Myers in~{cite"Myers1983"}. A thorough exploration of the correspondence is conducted by Okasaki in~{cite"Okasaki1999"}(*arnaud: add relevant chapters*) where he introduces the idea of using non-uniform inductive datatypes in the context of numerical representations. As a matter of fact, the type of power lists actually appears in~{cite"Okasaki1999"} as a pedagogical introduction to non-uniformly recursive lists. Relatedly, Okasasi uses, in~{cite"Okasaki1999a"}, a non-uniform recursive datatype to devise a type containing only square matrices, it is also based on numerical representations but uses a tail-recursive exponentiation.
 
 Although the power lists may look like some sort of trees, it is not a very accurate depiction. The easiest way to picture how power lists works is to see <#TwicePlusOne#> as a fancy <#(::)#>, then the lists with, respectively, $1$, $3$, $7$, and $15$ elements are as follows:
 {itemize [
@@ -136,12 +136,11 @@ Just like with regular lists, there is a {emph"map"} function for power lists. D
 
   #{module_elipsis}#
 
-  let rec map : 'a 'b. ('a->'b) -> 'a t -> 'b t = fun f l ->
-    match l with
+  let rec map : 'a 'b. ('a->'b) -> 'a t -> 'b t = fun f -> function
     | Zero -> Zero
-    | TwicePlusOne (x,l) ->
+    | TwicePlusOne (x,lst) ->
         let f' (x,y) = f x , f y in
-        TwicePlusOne ( f x , map f' l)
+        TwicePlusOne ( f x , map f' lst)
 
 end#>"}
 
@@ -149,7 +148,7 @@ end#>"}
 
 In Section~{ref_ s_algo}, labels are separated from trees dynamically. The <#pass#> function verifies that trees and labels are interleaved properly, and fails if they are not.
 
-In this section, instead, we consider a variant of <#'a PowerList.t#> where every odd position is a tree, and every even position an element. More generally, we define a type <#('odd,'even) AlternatingPowerList.t#> where odd positions have type <#'odd#>, and even positions have type <#'even#>. Such a list should have the following pattern:
+In this section, instead, we consider a variant of <#'a PowerList.t#> where every odd position contains a tree, and every even position contains an element. More generally, we define a type <#('odd,'even) AlternatingPowerList.t#> where odd positions have type <#'odd#>, and even positions have type <#'even#>. Such a list should have the following pattern:
 {itemize [
   "<#['odd;('even,'odd);(('even,'odd),('even,'odd))]#>";
 ]}
@@ -162,22 +161,22 @@ After the first element, which must have type <#'odd#>, there is no difference b
 
 end#>"}
 
+For concision, let us write <#PL#> and <#APL#> for <#PowerList#> and <#AlternatingPowerList#> respectively.
 
-Using these alternating power lists, we can define an <#assert false#> free version of the <#pass#> function. Indeed, consider an alternating power list of length at least $3$: abusing the notations, it is of the form <#TwicePlusOne a (TwicePlusOne (b,c) l#>, where <#l#> has type <#(('even*'odd)*('even*'odd)) PowerList.t#>. The <#pass#> function of Section~{ref_ s_algo}, as it happens, manipulates its arguments by groups of four elements: basically, <#pass#> is simply a <#map#> over <#l#>.
+Using these alternating power lists, we can define an <#assert false#>-free version of the <#pass#> function. Indeed, consider an alternating power list of length at least $3$:  it is of the form <#APL.TwicePlusOne (a, PL.TwicePlusOne ((b,c), lst))#>, where <#lst#> has type <#(('even*'odd)*('even*'odd)) PowerList.t#>. The <#pass#> function of Section~{ref_ s_algo}, as it happens, manipulates its arguments by groups of four elements: basically, <#pass#> is simply a <#map#> over <#l#>.
 
 (* <#pass:'a tree -> ('a*'a tree) -> (('a*'a tree)*('a*'a tree)) PL.t -> ('a tree,'a) APL.t#> *)
-Writing <#PL#> and <#APL#> for <#PowerList#> and <#AlternatingPowerList#> respectively, we hence define the function <#pass#>
+We hence define the function <#pass#>
 which joins the trees in a list of length ${exponent $2$ $k+2$}-1${footnote"To ensure that its argument list has at least three elements, <#pass#> takes the three first elements as extra arguments. In other words <#pass t (x,s) l#> is meant to be read as <#pass (TwicePlusOne (t , TwicePlusOne ((x,s),l)))#>."}, producing a list of length ${exponent $2$$k+1$}-1$. The function <#loop#> is virtually unchanged from Section~{ref_ s_algo}, except it acts on power lists:
-{display"<#let pass t (x,s) l =
-    APL.TwicePlusOne (
-       Node (t,x,s) ,
-       PL.map (fun ((a,t),(b,s)) -> a , Node(t,b,s) ) l )
+{display"<#let pass left (root,right) apl =
+    let pair_of_four ((single,left),(root,right)) = single, Node (left,root,right) in
+    APL.TwicePlusOne ( Node (left,root,right) , PL.map pair_of_four apl)
 
 let rec loop : 'e. ('e tree,'e) APL.t -> 'e tree = function
   | APL.Zero -> Leaf
-  | APL.TwicePlusOne (t,PL.Zero) -> t
-  | APL.TwicePlusOne (t,PL.TwicePlusOne (xs,l)) ->
-      loop (pass t xs l)#>"}
+  | APL.TwicePlusOne (tree,PL.Zero) -> tree
+  | APL.TwicePlusOne (tree,PL.TwicePlusOne (pair,apl)) ->
+      loop (pass tree pair apl)#>"}
 
 {subsection"Padding"}
 
