@@ -180,64 +180,60 @@ let rec loop : 'e. ('e tree,'e) APL.t -> 'e tree = function
 
 {subsection"Padding"}
 
-There is no partial function in the code of <#balance_powerlist#>, but we have not achieved our goal yet: we want to turn any list into a tree. Like in Section~{ref_ s_algo} we will use an initialisation phase, were we will pad our list with empty trees to reach a length of $2^k-1$. The output of this initialisation will be a <#('a tree,'a) APL.t#>.
+Now that, there is no more <#assert false#> in the code of <#loop#>, we need to change the <#complete#> function of Section~{ref_ s_algo} so that it returns an <#('a tree,'a) APL.t#> rather than a list. The heart of this section is a function which turns an <#'a list#> into an <#('a*'a tree) PL.t#>. The final function, which produces an <#('a tree,'a) APL.t#> is a simple wrapper around the former.
 
-The heart of this section is a function which turns a non-empty list of <#'a#> into an <#('a*'a tree) PowerList.t#>. The final function, which produces an <#('a tree,'a) AlternatingPowerList.t#> is a thing wrapper around the former. The idea here is to represent the non-empty list in a way that makes its {emph"parity"} apparent. Such a type is <#('a*'a) list#>: the type of lists of even length. For a general list, there is a loose element (which we choose to be the first) when it has odd length, leading to the type <#'a option * ('a*'a) list#>. But the latter type may contains the empty list, to prevent this, we keep the {emph"two first"} apart when the list has even length, so our type of non-empty lists is <#'a eo * ('a*'a) list#>, where <#'a eo#> is the following type:
-{display"<#type 'a eo =
-  | Odd of 'a
-  | Even of ('a*'a)#>"}
+We want to turn a list <#l#> of length $n$ into a power list of length $2{times}(2^k-1){geqslant} n$ (each element of the power list is, in fact, a pair of consecutive elements). In particular, the returned power list always has always an even length, so if <#l#> has odd length, we will need to insert at least a <#Leaf#>. This suggests that me may inspect the parity of the length of <#l#>, and insert an extra element precisely when it is odd. This leads to a slightly different padding procedure than that of Section~{ref_ s_algo}, in particular the leaves are not inserted at the same position, but it is inconsequential.
 
-We can fold a non-empty list into a <#'a eo * ('a*'a) list#> with the function <#pair_up: 'a -> 'a list -> 'a eo * ('a*'a) list#>:
-{display"<#let rec pair_up hd = function
-  | [] -> Odd hd , []
-  | b::l ->
-      begin match pair_up b l with
-      | Even bc,l' -> Odd hd , bc::l'
-      | Odd b,l' -> Even (hd,b) , l'
+An <#'a list#> of even length can be turned into an <#('a*'a) list#> whose length is halved. This turns out to be interesting for our recursion, since it mimics the inductive step of power lists. Also, in the case of even length, we need to distinguish the empty case from the non-empty case: the former will be turned into the empty power list <#APL.Zero#> while the latter will be turned into a power list of the form <#APL.TwicePlusOne((x,y),l)#>, where <#x#> and <#y#> correspond to the two elements of <#l#>. These different cases are represented in the following view:
+{display"<#type 'a parity =
+  | Empty
+  | Odd of 'a * ('a*'a) list
+  | Even of ('a*'a) * ('a*'a) list
+
+let rec pair_up = function
+  | [] -> Empty
+  | a::l ->
+      begin match pair_up l with
+      | Empty -> Odd (a , [])
+      | Odd (b,l') -> Even ((a,b) , l')
+      | Even (bc,l') -> Odd (a , bc::l')
       end#>"}
 
-Finally, abstracting the return type for recursion, we can write:
+We observe that in the recursive step of the algorithm, supposing we have an odd length <#('a,'a) list#>, the isolated element is a pair <#(x,y)#>. In this case we want to insert two leaves and put <#((x,Leave),(y,Leave))#> in the front of the list. However, if we were to naïvely take a default tree as an argument to the padding procedure, we would try to put something of the form <#((x,y),(Leave,Leave))#> -- which is not even well-typed -- instead. So, rather than a default tree, the function <#PL.of_list#> takes a defaulting function <#d#> which is seen as inserting a default element at every even position. Additionally, we need a function <#f#> which turns a list of labels into alternate labels and singleton trees. The return type of <#PL.of_list#> is abstracted for the sake of the recursion.
 {display"<#module PowerList = struct
 
   #{module_elipsis}#
 
-  let rec of_ne_list : 'a 'b. ('a->'b) -> ('a*'a->'b) -> 'a eo -> ('a*'a) list -> 'b t =
-    fun d f a l ->
-      let cast = function
-        | Odd x -> d x
-        | Even (x,y) -> f (x,y)
-      in
-      match l with
-      | [] -> One (cast a)
-      | b::l ->
-          let d' (x,y) = (d x , d y) in
-          let f' (x,y) = (f x , f y) in
-          let (b',l') = pair_up b l in
-          TwicePlusOne ( cast a , of_ne_list d' f' b' l' )
-end#>"}
-Where <#cast#> witnesses that <#d#> and <#f#> together form a function <#'a eo -> 'b#>. We could have used such a function as an argument, but because of the recursive step, it would actually have been more verbose. Notice how every recursive step has a call to <#pair_up#>, to keep up with the non-uniform inductive definition of <#'a PowerList.t#>.
+  
+  let rec of_list : 'a 'b. ('a->'b) -> ('a*'a->'b) -> 'a list -> 'b t =
+    fun d f l ->
+      let d' (x,y) = (d x , d y) in
+      let f' (x,y) = (f x , f y) in
+      match pair_up l with
+      | Empty -> Zero
+      | Odd  (a ,l') -> TwicePlusOne ( d a  , of_list d' f' l' )
+      | Even (ab,l') -> TwicePlusOne ( f ab , of_list d' f' l' )#>"}
 
 With that function, we can conclude our implementation. Again writing <#PL#> and <#APL#> for <#PowerList#> and <#AlternatingPowerList#> respectively:
+(* arnaud: we probably don't need most of thie sentence now. *)
 
 {display"<#module AlternatingPowerList = struct
 
   #{module_elipsis}#
 
   let of_list d f g = function
-    | [] -> One d
-    | [a] -> One (f a)
-    | a::b::l ->
+    | [] -> Zero
+    | a::l ->
         let d' x = g x , d in
         let fg (x,y) = g x , f y in
-        let (b',l') = PowerList.pair_up b l in
-        TwicePlusOne ( f a , PowerList.of_ne_list d' fg b' l')
+        TwicePlusOne (f a , PowerList.of_list d' fg l)
 
 end
 
 let singleton x = Node(Leaf,x,Leaf)
 let balance l =
-  balance_powerlist (APL.of_list Leaf singleton (fun e->e) l) #>"}
-The final function, <#balance:'a list -> 'a tree#>, indeed implements the algorithm of Section~{ref_ s_algo} without any partial functions.
+  loop (APL.of_list Leaf singleton (fun e->e) l)#>"}
+The final function, <#balance:'a list -> 'a tree#>, implements the same algorithm as Section~{ref_ s_algo} without any partial functions.
 "
 
 let coq = "{section"Turning to Coq" ~label:s_coq}
