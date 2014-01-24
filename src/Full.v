@@ -14,11 +14,11 @@ Notation "f × g" := (fun xy => let '(x,y) := xy in (f x,g y))
 Inductive FullTree (A:Type) : nat -> Type :=
   | Leaf₀ : FullTree A 0
   | Leaf₁ : FullTree A 1
-  | Node {n:nat} : FullTree A n -> A -> FullTree A n -> FullTree A (S n)
+  | Node {k:nat} : FullTree A k -> A -> FullTree A k -> FullTree A (S k)
 .
 Arguments Leaf₀ {A}.
 Arguments Leaf₁ {A}.
-Arguments Node {A n} _ _ _.
+Arguments Node {A k} _ _ _.
 
 Module BinaryList.
 
@@ -69,24 +69,24 @@ Module PowerList.
       version: we keep the height as an argument. For the sake of
       simplicity, power lists are defined recursively rather than
       inductively. *)
-  Fixpoint T (A:Type) (n:nat) :=
-    match n with
+  Fixpoint T (A:Type) (k:nat) :=
+    match k with
     | 0 => unit:Type
-    | S n' => (A * T (A*A) n')%type
+    | S k' => (A * T (A*A) k')%type
     end
   .
 
   (** Variant of [T] with implicit height. *)
-  Definition U (A:Type) := { n:nat & T A n }.
+  Definition U (A:Type) := { k:nat & T A k }.
   Definition zero {A:Type} : U A := ⟨ 0 , tt ⟩.
   Definition tpo {A:Type} (a:A) (l:U (A*A)) : U A :=
-    let '⟨n,l⟩ := l in
-    ⟨ S n , (a,l) ⟩.
+    let '⟨k,l⟩ := l in
+    ⟨ S k , (a,l) ⟩.
 
-  Fixpoint map {A B n} (f:A->B) : T A n -> T B n :=
-    match n with
+  Fixpoint map {A B k} (f:A->B) : T A k -> T B k :=
+    match k with
     | 0 => fun t => tt
-    | S n => fun t =>
+    | S k => fun t =>
       let '(x,l) := t in
       ( f x , map (f×f) l )
     end
@@ -112,19 +112,19 @@ Module AlternatingPowerList.
   Module PL := PowerList.
   Module BL := BinaryList.
 
-  Definition T (Odd Even:Type) (n:nat) : Type :=
-    match n with
+  Definition T (Odd Even:Type) (k:nat) : Type :=
+    match k with
     | 0 => unit%type
-    | S n => (Odd * PL.T (Even*Odd) n)%type
+    | S k => (Odd * PL.T (Even*Odd) k)%type
     end
   .
 
   (** Variant of [T] with implicit height. *)
-  Definition U (Odd Even:Type) := { n:nat & T Odd Even n }.
+  Definition U (Odd Even:Type) := { k:nat & T Odd Even k }.
   Definition zero {Odd Even:Type} : U Odd Even := ⟨ 0 , tt ⟩.
   Definition tpo {Odd Even:Type} (a:Odd) (l:PL.U (Even*Odd)) : U Odd Even :=
-    let '⟨n,l⟩ := l in
-    ⟨ S n , (a,l) ⟩.
+    let '⟨k,l⟩ := l in
+    ⟨ S k , (a,l) ⟩.
 
   Definition of_binary_list {A Odd Even} (d:Odd) (f:A->Odd) (g:A->Even) (l:BL.T A) : U Odd Even :=
     match l with
@@ -148,23 +148,23 @@ Module BL := BinaryList.
 Module PL := PowerList.
 Module APL := AlternatingPowerList.
 
-Definition pass {A n p} (l:APL.T (FullTree A (S p)) A (S (S n))) : APL.T (FullTree A (S (S p))) A (S n) :=
+Definition pass {A k p} (l:APL.T (FullTree A (S p)) A (S (S k))) : APL.T (FullTree A (S (S p))) A (S k) :=
   let '(t,((a,s),l')) := l in
   ( Node t a s , PL.map (fun q => let '((a,t),(b,s)) := q in ( a , Node t b s ) ) l' )
 .
 
 (** Alternative definition of [plus] which follows our recursion. *)
-Fixpoint plus (n p:nat) : nat :=
-  match n with
+Fixpoint plus (k p:nat) : nat :=
+  match k with
   | 0 => p
-  | S n => plus n (S p)
+  | S k => plus k (S p)
   end
 .
 
-Fixpoint loop {A n p} : APL.T (FullTree A (S p)) A (S n) -> FullTree A (plus n (S p)) :=
-  match n with
+Fixpoint loop {A k p} : APL.T (FullTree A (S p)) A (S k) -> FullTree A (plus k (S p)) :=
+  match k with
   | 0 => fun t => let '(t,tt) := t in t
-  | S n => fun l => loop (pass l)
+  | S k => fun l => loop (pass l)
   end
 .
 
@@ -173,10 +173,10 @@ Definition singleton {A:Type} (x:A) : FullTree A 1 :=
   Node Leaf₀ x Leaf₀
 .
 
-Definition balance {A:Type} (l:list A) : { n:nat & FullTree A n } :=
-  let '⟨n,l⟩ := APL.of_list Leaf₁ singleton (fun x=>x) l in
-  match n with
+Definition balance {A:Type} (l:list A) : { k:nat & FullTree A k } :=
+  let '⟨k,l⟩ := APL.of_list Leaf₁ singleton (fun x=>x) l in
+  match k with
   | 0 => fun _ => ⟨ 0 , Leaf₀ ⟩
-  | S n => fun (l:APL.T _ _ (S n)) => ⟨ plus n 1 , loop l ⟩
+  | S k => fun (l:APL.T _ _ (S k)) => ⟨ plus k 1 , loop l ⟩
   end l
 .
