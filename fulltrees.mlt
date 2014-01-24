@@ -257,7 +257,9 @@ We will also need a version where <@k@> can be arbitrary. For that purpose we us
   Definition zero {A:Type} : U A := ⟨ 0 , tt ⟩.
   Definition tpo {A:Type} (a:A) (l:U (A*A)) : U A :=
     let '⟨k,l⟩ := l in
-    ⟨ S k , (a,l) ⟩.@>"}
+    ⟨ S k , (a,l) ⟩.
+
+End PowerList@>"}
 The definition of <@AlternatingPowerList.T@> and <@AlternatingPowerList.U@> are similar.
 
 {subsection"Full trees"}
