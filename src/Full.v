@@ -54,12 +54,8 @@ Module BinaryList.
     end
   .
 
-  Fixpoint of_list {A} (l:list A) : T A :=
-    match l with
-    | [] => zero
-    | a::l => cons a (of_list l)
-    end
-  .
+  Definition of_list {A} (l:list A) : T A :=
+    List.fold_right cons zero l.
 
 End BinaryList.
 
