@@ -399,13 +399,13 @@ let title = {
 
 let authors = [
   { name = "Guyslain Naves";
-    email = "arnaud@spiwack.net";
-    institution = inria;
+    email = "guyslain.naves@lif.univ-mrs.fr";
+    institution = amu;
     running_name = None
   };
   { name = "Arnaud Spiwack";
-    email = "guyslain.naves@lif.univ-mrs.fr";
-    institution = amu;
+    email = "arnaud@spiwack.net";
+    institution = inria;
     running_name = None
   };
 ]
