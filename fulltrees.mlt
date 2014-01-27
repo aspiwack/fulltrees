@@ -211,7 +211,9 @@ The last difficulty is that <#pad#> and <#coerce#> both depend on the current we
       match pair_up bits with
       | Empty -> Zero
       | Odd (a,pures) -> TwicePlusOne (pad a, of_list pad' coerce' pures)
-      | Even (ab,pures) -> TwicePlusOne (coerce ab, of_list pad' coerce' pures)#>"}
+      | Even (ab,pures) -> TwicePlusOne (coerce ab, of_list pad' coerce' pures)
+
+  end#>"}
 
 With that function, we can conclude our implementation. Again writing <#PL#> and <#APL#> for <#PowerList#> and <#AlternatingPowerList#> respectively:
 (* arnaud: we probably don't need most of thie sentence now. *)
