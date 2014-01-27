@@ -81,7 +81,7 @@ It remains to show how to transform a list of labels of length $n$ into an alter
   pad missing list
 #>"}
 
-The balancing algorithm <#balance: 'a list -> 'a tree #> is thus given by:
+The balancing algorithm <#balance: 'a list -> 'a tree #> is thus given by the composition of <#loop#> with <#complete#>:
 {display"<#let balance list = loop (complete list)#>"}
 (* arnaud: we will need to speak of how the position of the leaves in the alternating list does not matter, as it will change a little in the other sections *)
 "
