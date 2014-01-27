@@ -20,6 +20,12 @@ let keywords = [
   "end";
 ]
 
+let hspace_ s = command "hspace*" [T, latex_of_size s] T
+let symbols = [
+  "->", rightarrow;
+  "::", texttt(text":"^^hspace_ (`Em (-0.25))^^text":");
+]
+
 let verbatim_code x = texttt (Verbatim.verbatim (Verbatim.trim ['\n'] x))
 
 let verbatim_keywords =
@@ -32,7 +38,7 @@ let ocaml_code_base x =
     ~kw_apply: (fun x -> textbf (textsf x))
     ~rem_apply: (fun s -> texttt (Latex.Verbatim.verbatim s))
     ~keywords
-    ~symbols: ["->", rightarrow]
+    ~symbols
     ~underscore: (Str.regexp "__")
     x
 
