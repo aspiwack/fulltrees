@@ -279,7 +279,7 @@ To code full trees, we index trees by their height, and specify that leaves can 
 If we omitted the constructor <@Leaf₁@>, we would have a definition of complete binary trees: both subtrees of a node are complete binary trees of the same height. We allow the full trees to be incomplete by letting <@Leaf₁@> take the place of nodes on the last level.
 
 Using the type <@FullTree A k@> in place of the type <#'a tree#>, the functions <@pass@> and <@balance_powerlist@> are virtually unmodified{footnote
-"In fact, as can be seen from its type, <@loop@> only handles non-empty alternating power lists. This is due to a small technicality: the recursive step of <@loop@> is in the case <@S (S k@>, but Coq does not recognise <@S k@> as a structural subterm of <@S (S k)@>, so the definition from Section~{ref_ s_ocaml} does not verifies Coq's structural recursion criterion. As a workaround, the empty case is moved to the <@balance@> function."
+"In fact, as can be seen from its type, <@loop@> only handles non-empty alternating power lists. This is due to a small technicality: the recursive step of <@loop@> is the case <@S (S k)@>, but Coq does not recognise <@S k@> as a structural subterm of <@S (S k)@>, so the definition from Section~{ref_ s_ocaml} does not verifies Coq's structural recursion criterion. As a workaround, the empty case is moved to the <@balance@> function."
 } with respect to Section~{ref_ s_ocaml}. Only their types change to reflect the extra information:
 {display"<@Definition pass {A k p} :
      APL.T (FullTree A (S p)) A (S (S k)) -> APL.T (FullTree A (S (S p))) A (S k).
@@ -289,9 +289,9 @@ The algorithm indeed builds only full trees.
 
 {subsection"Structural initialisation"}
 
-The padding conversion from lists to power lists, in Section~{ref_ s_ocaml}, is not structural due to the use of <#pair_up#> in the recursive call. To tackle this recursion, we shall make use of another intermediate structure. What we need, essentially, is that all the calls to <#pair_up#> are pre-calculated, so the intermediate structure will be like <#parity#> except that the calls to <#('a*'a) list#> are replaced by calls to <#('a*'a) parity#>.
+The padding conversion from lists to power lists, in Section~{ref_ s_ocaml}, is not structural due to the use of <#pair_up#> in the recursive call. To tackle this recursion, we shall make use of another intermediate structure. What we need, essentially, is that all the calls to <#pair_up#> are pre-calculated, so the intermediate structure will be like <#parity#> except that the calls to <#('a*'a) list#> are replaced by inductive calls.
 
-As it turns out, this is another non-uniform datatype which corresponds to a numerical representation. Indeed, we can write any natural number in binary with digits $1$ and $2$ (but not $0$). In this system, for example, $8$ is represented as $112$. Here is the definition:
+As it turns out, this is another non-uniform datatype which corresponds to a numerical representation. Indeed, any natural number can be written in binary with digits $1$ and $2$ (but not $0$). In this system, for example, $8$ is represented as $112$. Here is the definition:
 (* arnaud: either explain that tpt stands for twice plus two, or change the name altogether *)
 {display"<@Module BinaryList.
 
@@ -312,10 +312,13 @@ To turn a non-empty list into a <@BinaryList.T@>, all we need is a function <@co
     | tpt b c l => tpo a (cons (b,c) l)
     end.
 
+  Definition of_list {A} (l:list A) : T A :=
+    List.fold_right cons zero l.
+
 End BinaryList.@>"}
 Note that while <@cons@> takes, in the worst case, logarithmic time with respect to the length of the list, building a list by repeatedly using <@cons@> is still linear. (*arnaud: guyslain should help me give a good explanation here. *)
 
-We also need a function which turns a <@T (A*A)@> into a <@T A@>. This is effectively multiplication by $2$. The lack of $0$ among the digits{footnote"The constructor <@zero@> represents an empty list of digits."} makes this process recursive. It is best understood as adding a $0$ at the end of the number, then eliminating the $0$ using the following equalities:
+We also need a function which turns a <@T (A*A)@> into a <@T A@>. This is effectively multiplication by $2$. The lack of $0$ among the digits{footnote"The constructor <@zero@> represents an empty list of digits."} makes this process recursive. A simple presentation of the duplication algorithm consists in adding a $0$ at the end of the number, then eliminating the $0$ using the following equalities:
 {displaymath begin just_left `Brace (array [`C;`L;`C] [
   array_line [$0$   ; $=$ ; cdot ];
   array_line [$x20$ ; $=$ ; $x12$];
@@ -351,14 +354,33 @@ Where <@g×f@> is the function which maps <@(x,y)@> to <@(g x,f y)@>.
 The rest follows straightforwardly, and we can define the following functions which conclude the algorithm (<@BL@>, <@PL@>, and <@APL@> stand for <@BinaryList@>, <@PowerList@>, and <@AlternatingPowerList@> respectively):
 {display"<@Module AlternatingPowerList.
   @{module_elipsis}@
-  Definition of_binary_list {A Odd Even} (d:Odd) (f:A->Odd) (g:A->Even) (l:BL.T A) : U Odd Even.
+  
+  Definition of_binary_list {A Odd Even} (d:Odd) (f:A->Odd) (g:A->Even) (l:BL.T A) : U Odd Even :=
+    match l with
+    | BL.zero => zero
+    | BL.tpo a l =>
+      let d' x := ( g x , d ) in
+      tpo (f a) (PL.of_binary_list d' (g×f) (BL.twice l))
+    | BL.tpt a b l  =>
+      let d' x := ( g x , d ) in
+      tpo (f a) (PL.of_binary_list d' (g×f) (BL.tpo b l))
+    end.
 
-  Definition of_list {A Odd Even} (d:Odd) (f:A->Odd) (g:A->Even) (l:list A) : U Odd Even.
+  Definition of_list {A Odd Even} (d:Odd) (f:A->Odd) (g:A->Even) (l:list A) : U Odd Even :=
+    of_binary_list d f g (BL.of_list l).
 
 End AlternatingPowerList.
 
 
-Definition balance {A:Type} (l:list A) : { k:nat & FullTree A k }.@>"}
+Definition singleton {A:Type} (x:A) : FullTree A 1 :=
+  Node Leaf₀ x Leaf₀.
+
+Definition balance {A:Type} (l:list A) : { k:nat & FullTree A k } :=
+  let '⟨k,l⟩ := APL.of_list Leaf₁ singleton (fun x=>x) l in
+  match k with
+  | 0 => fun _ => ⟨ 0 , Leaf₀ ⟩
+  | S k => fun l => ⟨ plus k 1 , loop l ⟩
+  end l.@>"}
 "
 
 let concl = "{section"Conclusion"}
