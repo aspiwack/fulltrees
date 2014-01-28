@@ -281,10 +281,10 @@ If we omitted the constructor <@Leaf₁@>, we would have a definition of complet
 Using the type <@FullTree A k@> in place of the type <#'a tree#>, the functions <@pass@> and <@balance_powerlist@> are virtually unmodified{footnote
 "In fact, as can be seen from its type, <@loop@> only handles non-empty alternating power lists. This is due to a small technicality: the recursive step of <@loop@> is the case <@S (S k)@>, but Coq does not recognise <@S k@> as a structural subterm of <@S (S k)@>, so the definition from Section~{ref_ s_ocaml} does not verifies Coq's structural recursion criterion. As a workaround, the empty case is moved to the <@balance@> function."
 } with respect to Section~{ref_ s_ocaml}. Only their types change to reflect the extra information:
-{display"<@Definition pass {A k p} :
-     APL.T (FullTree A (S p)) A (S (S k)) -> APL.T (FullTree A (S (S p))) A (S k).
-Fixpoint loop {A k p} :
-     APL.T (FullTree A (S p)) A (S k) -> FullTree A (plus k (S p)) {struct k}.@>"}
+{display"<@Definition pass {A k p} : APL.T (FullTree A (S p)) A (S (S k)) ->
+     APL.T (FullTree A (S (S p))) A (S k).
+Fixpoint loop {A k p} : APL.T (FullTree A (S p)) A (S k) ->
+     FullTree A (plus k (S p)) {struct k}.@>"}
 The algorithm indeed builds only full trees.
 
 {subsection"Structural initialisation"}
