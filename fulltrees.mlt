@@ -53,8 +53,8 @@ A single traversal, encoded by <#pass : 'a tree_or_elt list -> 'a tree_or_elt_li
 {display"<#let join left node right = Tree (Node (left, node, right))
 
 let rec pass list = match  list with
-  | Tree left :: Elt root :: Tree right :: Elt e :: others -> 
-    join left root right :: Elt e :: pass others
+  | Tree left :: Elt root :: Tree right :: Elt e :: others ->
+      join left root right :: Elt e :: pass others
   | [Tree left; Elt root; Tree right] -> [join left root right]
   | _ -> assert false
 
@@ -73,7 +73,8 @@ It remains to show how to transform a list of labels of length $n$ into an alter
   let rec pow2 i = if i <= n then pow2 (2*i) else i in 
   let missing = (pow2 1) - n - 1 in
   let rec pad missing = function
-    | head::tail when missing <> 0 -> Tree Leaf :: Elt head :: pad (missing - 1) tail
+    | head::tail when missing <> 0 ->
+        Tree Leaf :: Elt head :: pad (missing - 1) tail
     | odd::even::others -> join Leaf odd Leaf :: Elt even :: pad 0 others
     | [single] -> [join Leaf single Leaf]
     | [] -> []
@@ -166,9 +167,12 @@ Using these alternating power lists, we can define a version of the <#pass#> fun
 (* <#pass:'a tree -> ('a*'a tree) -> (('a*'a tree)*('a*'a tree)) PL.t -> ('a tree,'a) APL.t#> *)
 We hence define the function <#pass#>
 which joins the trees in a list of length ${exponent $2$ $k+2$}-1${footnote"To ensure that its argument list has at least three elements, <#pass#> takes the three first elements as extra arguments. In other words <#pass t (x,s) l#> is meant to be read as <#pass (TwicePlusOne (t , TwicePlusOne ((x,s),l)))#>."}, producing a list of length ${exponent $2$$k+1$}-1$. The function <#loop#> is virtually unchanged from Section~{ref_ s_algo}, except it acts on power lists:
-{display"<#let pass left (root,right) apl =
-    let pair_of_four ((single,left),(root,right)) = single, Node (left,root,right) in
-    APL.TwicePlusOne ( Node (left,root,right) , PL.map pair_of_four apl)
+{display"<#
+let pass left (root,right) apl =
+  let join_up ((single,left),(root,right)) =
+    single, Node (left,root,right)
+  in
+  APL.TwicePlusOne ( Node (left,root,right) , PL.map join_up apl)
 
 let rec loop : 'e. ('e tree,'e) APL.t -> 'e tree = function
   | APL.Zero -> Leaf
@@ -211,7 +215,8 @@ The last difficulty is that <#pad#> and <#coerce#> both depend on the current we
       match pair_up bits with
       | Empty -> Zero
       | Odd (a,pures) -> TwicePlusOne (pad a, of_list pad' coerce' pures)
-      | Even (ab,pures) -> TwicePlusOne (coerce ab, of_list pad' coerce' pures)
+      | Even (ab,pures) ->
+          TwicePlusOne (coerce ab, of_list pad' coerce' pures)
 
   end#>"}
 
@@ -296,7 +301,7 @@ As it turns out, this is another non-uniform datatype which corresponds to a num
 
 End BinaryList.@>"}
 
-To turn a non-empty list into a <@BinaryList.T@>, all we need is a function <@cons : A -> T A -> T A@> to add an element in front of the list. On the numerical representation side, it corresponds to adding $1$. It behaves like adding $1$ in the usual binary representation, except that $1$-s are turned into $2$-s without a carry and $2$-s into $1$-s while producing a carry:
+To turn a non-empty list into a <@BinaryList.T@>, all we need is a function <@cons@> of type <@A -> T A -> T A@> to add an element in front of the list. On the numerical representation side, it corresponds to adding $1$. It behaves like adding $1$ in the usual binary representation, except that $1$-s are turned into $2$-s without a carry and $2$-s into $1$-s while producing a carry:
 {display"<@Module BinaryList.
   @{module_elipsis}@
   Fixpoint cons {A} (a:A) (l:T A) : T A :=
@@ -364,13 +369,15 @@ The missing piece is to prove that the infix traversal of <@balance l@> is indee
   match t with
   | Leaf₀ => []
   | Leaf₁ => []
-  | Node _ t₁ x t₂ => list_of_full_tree_n t₁ ++ [x] ++ list_of_full_tree_n t₂
+  | Node _ t₁ x t₂ =>
+     list_of_full_tree_n t₁ ++ [x] ++ list_of_full_tree_n t₂
   end.
 
 Definition list_of_full_tree {A} (t:{ k:nat & FullTree A k }) : list A :=
   list_of_full_tree_n (projT2 t).@>"}
 We can then state the theorem:
-{display"<@Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l.@>"}
+{display"<@Theorem balance_preserves_order A (l:list A) :
+    list_of_full_tree (balance l) = l.@>"}
 
 The proof is short and straightforward: we define a traversal function for each intermediate structure; and state a variant of <@balance_preserves_order@> for each intermediate function. Proving the intermediate lemmas is not difficult and can be mostly automatised: we use a very simple generic automated tactic, which discharges most goals. This theorem concludes our easy formal proof of the balancing algorithm.
 "

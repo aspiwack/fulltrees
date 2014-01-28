@@ -127,10 +127,10 @@ module APL = AlternatingPowerList
     [('e,'o),('e,'o)]) the first one is kept as such, and the three
     others can be joined. *)
 let pass left (root,right) apl =
-  let pair_of_four ((single,left),(root,right)) =
+  let join_up ((single,left),(root,right)) =
     single, Node (left,root,right)
   in
-  APL.TwicePlusOne ( Node (left,root,right) , PL.map pair_of_four apl)
+  APL.TwicePlusOne ( Node (left,root,right) , PL.map join_up apl)
 
 let rec loop : 'e. ('e tree,'e) APL.t -> 'e tree = function
   | APL.Zero -> Leaf
