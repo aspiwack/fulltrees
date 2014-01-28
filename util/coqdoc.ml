@@ -65,6 +65,8 @@ let symbols = [
   "*" , mode M(text"*") ;
   "_", mode M(text"\\_") ;
   "++", mode M (text"+\\!\\!\\!+") ;
+  ":=" , mode M (command"coloneqq" ~packages:["mathtools",""] [] M) ;
+  "&" , textsf(text"\\&") ;
   (* utf8 symbols *)
   "η" , upeta ;
   "ι" , upiota ;
