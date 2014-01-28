@@ -64,6 +64,7 @@ let symbols = [
   ">" , ge ;
   "*" , mode M(text"*") ;
   "_", mode M(text"\\_") ;
+  "++", mode M (text"+\\!\\!\\!+") ;
   (* utf8 symbols *)
   "η" , upeta ;
   "ι" , upiota ;
