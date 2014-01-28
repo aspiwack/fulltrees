@@ -276,8 +276,9 @@ To code full trees, we index trees by their height, and specify that leaves can 
   | Leaf₀ : FullTree A 0
   | Leaf₁ : FullTree A 1
   | Node {k:nat} : FullTree A k -> A -> FullTree A k -> FullTree A (S k).@>"}
+If we omitted the constructor <@Leaf₁@>, we would have a definition of complete binary trees: both subtrees of a node are complete binary trees of the same height. We allow the full trees to be incomplete by letting <@Leaf₁@> take the place of nodes on the last level.
 
-With this modification, the functions <@pass@> and <@balance_powerlist@> are virtually unmodified{footnote
+Using the type <@FullTree A k@> in place of the type <#'a tree#>, the functions <@pass@> and <@balance_powerlist@> are virtually unmodified{footnote
 "In fact, as can be seen from its type, <@loop@> only handles non-empty alternating power lists. This is due to a small technicality: the recursive step of <@loop@> is in the case <@S (S k@>, but Coq does not recognise <@S k@> as a structural subterm of <@S (S k)@>, so the definition from Section~{ref_ s_ocaml} does not verifies Coq's structural recursion criterion. As a workaround, the empty case is moved to the <@balance@> function."
 } with respect to Section~{ref_ s_ocaml}. Only their types change to reflect the extra information:
 {display"<@Definition pass {A k p} :
