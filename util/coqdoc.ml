@@ -113,9 +113,16 @@ let calletters = (
     mathcal (text (String.sub s 2 1))
 )
 
-let whitespaces =
+let comment_whitespaces =
   Str.regexp "[ \n]",
   Latex.Verbatim.verbatim
+
+let indent =
+  Str.regexp"^[ ]+",
+  Latex.Verbatim.verbatim
+let whitespaces =
+  Str.regexp "[ ]+",
+  fun _ -> text"~"
 
 let blanklines =
   Str.regexp"[\n]\\([ ]*[\n]\\)+",
@@ -124,9 +131,9 @@ let blanklines =
 let rec print n x = 
   assert (!n>=0);
   if !n = 0 then
-    Latex.Verbatim.regexps (blanklines::(open_comments n)::calletters::idents::symbols) else_apply x
+    Latex.Verbatim.regexps (blanklines::indent::whitespaces::(open_comments n)::calletters::idents::symbols) else_apply x
   else
-    Latex.Verbatim.regexps [open_comments n ; close_comments n; whitespaces ] (fun s -> itshape(text s)) x
+    Latex.Verbatim.regexps [open_comments n ; close_comments n; comment_whitespaces ] (fun s -> itshape(text s)) x
 
 and open_comments n =
   Str.regexp"(\\*\\(.\\|[\n]\\)*",
