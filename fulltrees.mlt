@@ -151,7 +151,7 @@ In this section, instead, we consider a variant of <#'a PowerList.t#> where ever
 {itemize [
   "<#['odd;('even,'odd);(('even,'odd),('even,'odd))]#>";
 ]}
-After the first element, which must have type <#'odd#>, there is no difference between even and odd positions: indeed, removing the first element, we actually have an <#('even*'odd) PowerList.t#>. Hence the definition:
+After the first element, which must have type <#'odd#>, there is no difference between even and odd positions: indeed, excluding the first element, we are actually building an <#('even*'odd) PowerList.t#>. Hence the definition:
 {display"<#module AlternatingPowerList = struct
 
   type ('odd,'even) t =
