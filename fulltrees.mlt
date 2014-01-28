@@ -222,7 +222,6 @@ The last difficulty is that <#pad#> and <#coerce#> both depend on the current we
   end#>"}
 
 With that function, we can conclude our implementation. Again writing <#PL#> and <#APL#> for <#PowerList#> and <#AlternatingPowerList#> respectively:
-(* arnaud: we probably don't need most of thie sentence now. *)
 
 {display"<#module AlternatingPowerList = struct
   #{module_elipsis}#
