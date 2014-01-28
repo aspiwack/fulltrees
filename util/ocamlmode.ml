@@ -60,12 +60,18 @@ let ocaml_code x =
   Melt.Verbatim.regexps [
     Str.regexp "[\n]\\([ ]*[\n]\\)+",
       (fun _ -> Latex.newline_size (`Baselineskip 0.5));
+    Str.regexp "[\n]",
+      (fun _ -> Latex.newline);
+    Str.regexp "^[ ]+", (** indentation *)
+      (fun s -> Latex.Verbatim.verbatim s);
+    Str.regexp "[ ]+", (** other spaces *)
+      (fun _ -> text"~");
     Str.regexp "\034\\([\\]\034\\|[^\034]\\)*\034",
       (fun s -> texttt (Latex.Verbatim.verbatim s));
     Str.regexp "(\\*\\([^*]\\|\\*[^)]\\)*\\*)",
       (fun s -> textit (text s));
     Str.regexp "'[a-z]+",
        to_greek;
-    Str.regexp_string "|",
-       (fun _ -> hspace (`Em 0.1)^^rule_ ~lift:(`Ex (-0.6)) (`Sp 1.) (`Baselineskip 1.));
+    Str.regexp "|",
+       (fun _ -> hspace_ (`Em 0.1)^^rule_ ~lift:(`Ex (-0.6)) (`Sp 1.) (`Baselineskip 1.)^^hspace_ (`Em 0.2));
   ] ocaml_code_base (Melt.Verbatim.trim ['\n'] x)
