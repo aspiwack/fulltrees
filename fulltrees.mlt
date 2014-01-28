@@ -166,7 +166,7 @@ Using these alternating power lists, we can define a version of the <#pass#> fun
 
 (* <#pass:'a tree -> ('a*'a tree) -> (('a*'a tree)*('a*'a tree)) PL.t -> ('a tree,'a) APL.t#> *)
 We hence define the function <#pass#>
-which joins the trees in a list of length ${exponent $2$ $k+2$}-1${footnote"To ensure that its argument list has at least three elements, <#pass#> takes the three first elements as extra arguments. In other words <#pass t (x,s) l#> is meant to be read as <#pass (TwicePlusOne (t , TwicePlusOne ((x,s),l)))#>."}, producing a list of length ${exponent $2$$k+1$}-1$. The function <#loop#> is virtually unchanged from Section~{ref_ s_algo}, except it acts on power lists:
+which joins the trees in a list of length ${exponent $2$ $k+2$}-1${footnote"To ensure that its argument list has at least three elements, <#pass#> takes the three first elements as extra arguments. In other words <#pass t (x,s) l#> is meant to be read as <#pass (APL.TwicePlusOne (t , PL.TwicePlusOne ((x,s),l)))#>."}, producing a list of length ${exponent $2$$k+1$}-1$. The function <#loop#> is virtually unchanged from Section~{ref_ s_algo}, except it acts on power lists:
 {display"<#
 let pass left (root,right) apl =
   let join_up ((single,left),(root,right)) =
