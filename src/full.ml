@@ -73,8 +73,8 @@ module PowerList = struct
       [d0] after the current value. *)
   let rec of_list : 'a 'b. ('a->'b) -> ('a*'a->'b) -> 'a list -> 'b t =
     fun pad coerce bits ->
-      let pad' (x,y) = (d x , d y) in
-      let coerce' (x,y) = (f x , f y) in
+      let pad' (x,y) = (pad x , pad y) in
+      let coerce' (x,y) = (coerce x , coerce y) in
       match pair_up bits with
       | Empty -> Zero
       | Odd  (a ,pures) -> TwicePlusOne (pad a, of_list pad' coerce' pures)
@@ -126,10 +126,11 @@ module APL = AlternatingPowerList
     are joined, then for each group of four elements (of type
     [('e,'o),('e,'o)]) the first one is kept as such, and the three
     others can be joined. *)
-let pass : 'a. 'a tree -> ('a*'a tree) -> (('a*'a tree)*('a*'a tree)) PL.t -> ('a tree,'a) APL.t =
-  fun left (root,right) apl ->
-    APL.TwicePlusOne ( Node (left,root,right) , 
-		       PL.map (fun ((single,left),(root,right)) -> single , Node(left,root,right) ) apl )
+let pass left (root,right) apl =
+  let pair_of_four ((single,left),(root,right)) =
+    single, Node (left,root,right)
+  in
+  APL.TwicePlusOne ( Node (left,root,right) , PL.map pair_of_four apl)
 
 let rec loop : 'e. ('e tree,'e) APL.t -> 'e tree = function
   | APL.Zero -> Leaf
