@@ -197,7 +197,8 @@ let pair_up lst =
     | Empty -> Odd (elt, [])
     | Odd (b,pairs) -> Even ((elt,b), pairs)
     | Even (bc,pairs) -> Odd (elt, bc::pairs)
-  in List.fold_right succ lst Empty#>"}
+  in
+  List.fold_right succ lst Empty#>"}
 
 The padding function itself, <#of_list#>, is at first-sight far from intuitive. Let's recall that we want to turn a list of labels of arbitrary length, into a power list of pairs. A label can be thought of as a bit of weight $2^0$, while a pair of labels would be a bit of weight $2^1$, and so on. At first, all our bits have weight $2^0$ and consists in one label each. We can build bits of higher weight by pairing up two bits of the same weight. A bit made up only of labels is called {emph"pure"}. We can also double the weight of a bit by interlacing leaves with it (with the function <#pad#>), but this gives a bit made of pairs of labels and trees, call them {emph"impure"}. Lastly, we can also transmute a pure bit into an impure bit of the same weight (with the function <#coerce#>), by replacing odd-position labels by trees of height one.
 
