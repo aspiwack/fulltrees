@@ -355,7 +355,8 @@ The rest follows straightforwardly, and we can define the following functions wh
 {display"<@Module AlternatingPowerList.
   @{module_elipsis}@
   
-  Definition of_binary_list {A Odd Even} (d:Odd) (f:A->Odd) (g:A->Even) (l:BL.T A) : U Odd Even :=
+  Definition of_binary_list {A Odd Even}
+      (d:Odd) (f:A->Odd) (g:A->Even) (l:BL.T A) : U Odd Even :=
     match l with
     | BL.zero => zero
     | BL.tpo a l =>
@@ -366,7 +367,8 @@ The rest follows straightforwardly, and we can define the following functions wh
       tpo (f a) (PL.of_binary_list d' (g×f) (BL.tpo b l))
     end.
 
-  Definition of_list {A Odd Even} (d:Odd) (f:A->Odd) (g:A->Even) (l:list A) : U Odd Even :=
+  Definition of_list {A Odd Even}
+      (d:Odd) (f:A->Odd) (g:A->Even) (l:list A) : U Odd Even :=
     of_binary_list d f g (BL.of_list l).
 
 End AlternatingPowerList.
