@@ -84,7 +84,6 @@ The balancing algorithm <#balance: 'a list -> 'a tree #> is thus given by the co
 {display"<#let balance list = loop (complete list)#>"}
 
 As for the complexity of this algorithm, notice that <#pass#> and <#complete#> are both clearly in linear-time in the length of the lists on which they work, while <#loop#> recurses on lists whose length are halved at each recursive step. Hence <#balance#> is a linear-time algorithm.
-(* arnaud: we will need to speak of how the position of the leaves in the alternating list does not matter, as it will change a little in the other sections *)
 "
 
 
@@ -255,7 +254,6 @@ There is still a property of the algorithm that the implementation of Section~{r
 To that effect, we will use Coq rather than Ocaml. Even if it is possible, with some effort, to represent full trees and implement the algorithm in Ocaml -- and relatively easy in Haskell -- a Coq implementation also gives us termination by construction. Coq forces every recursion to be structural, which will prove to be rather entertaining.
 
 At a superficial level, a visible difference with the Ocaml implementation is that <#Powerlist.t#> and <#AlternatingPowerList.t#> must be decorated with the $k$ such that the length is $2^k-1$: it is the structural recursion parameter of the <@balance_powerlist@> function. Because it makes the code simpler, we will use a recursive definition rather than an inductive one:
-(* arnaud: if we keep the part of exponentiation, we should have a remark here that this definition of powerlist is exactly the exponentiation algorithms *)
 {display"<@Module PowerList.
 
   Fixpoint T (A:Type) (k:nat) :=
@@ -299,8 +297,7 @@ The algorithm indeed builds only full trees.
 
 The padding conversion from lists to power lists, in Section~{ref_ s_ocaml}, is not structural due to the use of <#pair_up#> in the recursive call. To tackle this recursion, we shall make use of another intermediate structure. What we need, essentially, is that all the calls to <#pair_up#> are pre-calculated, so the intermediate structure will be like <#parity#> except that the calls to <#('a*'a) list#> are replaced by inductive calls.
 
-As it turns out, this is another non-uniform datatype which corresponds to a numerical representation. Indeed, any natural number can be written in binary with digits $1$ and $2$ (but not $0$). In this system, for example, $8$ is represented as $112$. Here is the definition:
-(* arnaud: either explain that tpt stands for twice plus two, or change the name altogether *)
+As it turns out, this is another non-uniform datatype which corresponds to a numerical representation. Indeed, any natural number can be written in binary with digits $1$ and $2$ (but not $0$). In this system, for example, $8$ is represented as $112$. Here is the definition, where <@tpo@> reads ``twice plus one'' and <@tpt@> ``twice plus two'':
 {display"<@Module BinaryList.
 
   Inductive T (A:Type) : Type :=
