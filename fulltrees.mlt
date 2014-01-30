@@ -241,11 +241,11 @@ let balance l =
   loop (APL.of_list Leaf singleton (fun e->e) l)#>"}
 The final function, <#balance:'a list -> 'a tree#>, implements the same algorithm as Section~{ref_ s_algo} without any partial functions.
 
-What we may have lost in this section, compared to the simple algorithm, is the simplicity of the complexity analysis of the algorithm. The subtleties of the main functions require a finer analysis. Consider first the function <#PL.map#>: clearly the number of recursive calls depends only logarithmically on the number of elements in the power list. But each recursive call uses as its first argument a function twice as complex than the previous one. This leads to the following inequation over the complexity $C(n,f)$ of <#map#>, where $n$ is the number of elements in the power list, and $f$ is the complexity of the mapped function:
+What we may have lost in this section, compared to the simple algorithm, is the simplicity of the complexity analysis of the algorithm. The subtleties of the main functions require a finer analysis. Consider first the function <#PL.map#>: clearly the number of recursive calls depends only logarithmically on the number of elements in the power list. But each recursive call uses as its first argument a function twice as complex than the previous one. This leads to the following inequation over the complexity $C(n,m,f)$ of <#map#>, where $n$ is the number of elements in the power list, $m$ is the size of the elements in the power list, and $f$ is the complexity of the mapped function:
 {displaymath
-$C(n,f) {leq} f(1) + C{between `Paren ${frac $n-1$ $2$},k {mapsto} 2 {times} f(k) + O(1)$} + O(1)$
+$C(n,m,f) {leq} f(m) + C{between `Paren ${frac $n-1$ $2$}, 2m, k {mapsto} 2 {times} f(k/2) + O(1)$} + O(1)$
 }
-From there, it is easy to prove that $C(n,f) = n.f(1) + O(n)$, so that <#PL.map#> runs indeed in linear-time, and so is <#loop#>. Similarly the complexity of <#PL.of_list#> can be described by a higher-order recursive inequation (almost the same as above, except that the complexity depends on two functions), whose solution gives also a linear-time complexity.
+From there, it is easy to prove that $C(n,m,f) = n.f(m) + O(n)$, so that <#PL.map#> runs indeed in linear-time, and so is <#loop#>. Similarly the complexity of <#PL.of_list#> can be described by a higher-order recursive inequation (almost the same as above, except that the complexity depends on two functions and the constant term is replaced by a linear term), whose solution gives also a linear-time complexity.
 "
 
 let coq = "{section"Turning to Coq" ~label:s_coq}
