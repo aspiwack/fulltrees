@@ -324,7 +324,7 @@ To turn a non-empty list into a <@BinaryList.T@>, all we need is a function <@co
     List.fold_right cons zero l.
 
 End BinaryList.@>"}
-Note that while <@cons@> takes, in the worst case, logarithmic time with respect to the length of the list, building a list by repeatedly using <@cons@> is still linear. (*arnaud: guyslain should help me give a good explanation here. *)
+Note that while <@cons@> takes, in the worst case, logarithmic time with respect to the length of the list, building a list by repeatedly using <@cons@> is still linear. Indeed, as previously mentioned, <#cons#> mimics the successor algorithm for binary numbers, whose amortized complexity is well-known to be constant.
 
 We also need a function which turns a <@T (A*A)@> into a <@T A@>. This is effectively multiplication by $2$. The lack of $0$ among the digits{footnote"The constructor <@zero@> represents an empty list of digits."} makes this process recursive. A simple presentation of the duplication algorithm consists in adding a $0$ at the end of the number, then eliminating the $0$ using the following equalities:
 {displaymath begin just_left `Brace (array [`C;`L;`C] [
