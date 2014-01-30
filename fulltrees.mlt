@@ -245,7 +245,7 @@ The final function, <#balance:'a list -> 'a tree#>, implements the same algorith
 
 What we possibly lost in this section, compared to the simple algorithm, is the easiness of the analysis of the time-complexity of the algorithm. Now the intricacy of the main functions requires a finer analysis. First consider the function <#map#>: clearly the number of recursive calls depends only logarithmically on the number of elements in the power list. But each recursive call uses as its first argument a function twice more complicated than the previous one. This leads to the following inequation over the complexity $C(n,f)$ of <#map#>, where $n$ is the number of elements in the power list, and $f$ is the complexity of the function mapped:
 {displaymath
-$C(n,f) {leq} f(1) + C{between `Paren ${frac $n$ $2$},k {mapsto} 2 {times} f(k) + O(1)$} + O(1)$
+$C(n,f) {leq} f(1) + C{between `Paren ${frac $n-1$ $2$},k {mapsto} 2 {times} f(k) + O(1)$} + O(1)$
 }
 From this it is easy to prove that $C(n,f) = n.f(1) + O(n)$, so that <#map#> is indeed in linear-time, and so is <#loop#>. Similarly the complexity of <#of_list#> can be described by a higher-order recursive inequation (actually almost the same, except that the complexity depends on two functions), whose solution gives also a linear-time complexity.
 "
