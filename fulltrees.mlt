@@ -379,10 +379,10 @@ The rest follows straightforwardly, and we can define the following functions wh
       (d:Odd) (f:A->Odd) (g:A->Even) (l:list A) : U Odd Even :=
     of_binary_list d f g (BL.of_list l).
 
-End AlternatingPowerList.
+End AlternatingPowerList.@>"}
 
 
-Definition singleton {A:Type} (x:A) : FullTree A 1 :=
+{display"<@Definition singleton {A:Type} (x:A) : FullTree A 1 :=
   Node Leaf₀ x Leaf₀.
 
 Definition balance {A:Type} (l:list A) : { k:nat & FullTree A k } :=
