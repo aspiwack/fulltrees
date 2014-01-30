@@ -19,14 +19,14 @@ let join left node right = Tree (Node (left, node, right))
     positions). It returns a list of size [2^(k+1)-1] alternating elements
     of the form [Tree t], where [t] is full and has height [h+1], and [Elt
     x]. *)
-let rec pass list = match  list with
+let rec pass = function
   | Tree left :: Elt root :: Tree right :: Elt e :: others -> join left root right :: Elt e :: pass others
   | [Tree left; Elt root; Tree right] -> [join left root right]
   | _ -> assert false
 
 (** The main loop of the algorithm iterates [pass] until it contains a
     single element, necessarily a full tree. *)
-let rec loop list = match list with
+let rec loop = function
   | [] -> Leaf
   | [Tree t] -> t
   | list -> loop (pass list)
