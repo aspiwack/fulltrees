@@ -84,6 +84,8 @@ It remains to show how to transform a list of labels of length $n$ into an alter
 
 The balancing algorithm <#balance: 'a list -> 'a tree #> is thus given by the composition of <#loop#> with <#complete#>:
 {display"<#let balance list = loop (complete list)#>"}
+
+As for the complexity of this algorithm, notice that <#pass#> and <#complete#> are both clearly in linear-time in the length of the lists on which they work, while <#loop#> recurses on lists whose length are halved at each recursive step. Hence <#balance#> is a linear-time algorithm.
 (* arnaud: we will need to speak of how the position of the leaves in the alternating list does not matter, as it will change a little in the other sections *)
 "
 
