@@ -102,17 +102,19 @@ To achieve this goal, it is necessary to have more precise types.
 Let us focus first on the length invariants: we will need to define a type which contains exactly the non-empty lists of length $2^k-1$.
 
 A data structure which holds $2^k-1$ elements brings complete binary trees to mind. Even though it is possible -- though not necessary convenient -- to represent complete binary trees in Ocaml, they are not the appropriate structure. First, because complete binary trees are full trees and are, hence, unlikely to serve as a useful intermediate data structure to build a full tree. Second because there is a simpler -- albeit more exotic -- alternative.
-Indeed, let us consider the following recursive definition of $2^k-1$:
+
+Indeed, lists can be seen as decorated unary numbers: there is an element at each successor. Different kinds of lists can be obtained, more or less systematically, by varying the numerical representation. This idea goes back to Guibas \& al. in~{cite"Guibas1977"} and a fairly thorough exploration can be found in Okasaki~{cite"Okasaki1999"~extra:"Chapters 9\&10"}. In the simplest cases,the analogous list structure corresponds to a structurally recursive exponentiation algorithm. For regular lists, a list of size $n$ can be recursively defined with the following equations:
 {displaymath begin just_left `Brace (array [`L;`L;`L] [
-  array_line [$2^0-1$; $=$ ; $0$];
-  array_line [${exponent $2$ $k+1$}-1$; $=$; $2 {times} (2^k-1)+1$];
+  array_line [${exponent $a$ $0$}$;$=$;$1$];
+  array_line [${exponent $a$ $n+1$}$;$=$;$a{times}a^n$];
 ]) end}
-Which is just a fancy way of saying that the $2^k-1$ are precisely those numbers which are written only with $1$-s in binary representation. In general, given a reasonable representation of (a subset of) the natural numbers, a corresponding structurally recursive definition of exponential can be deduced:
+Replacing unary numbers with binary numbers, we obtain the binary exponentiation algorithm:
 {displaymath begin just_left `Brace (array [`L;`L;`L] [
   array_line [exponent $a$ $2^0-1$; $=$ ; $1$];
-  array_line [exponent $a$ ${exponent $2$ $k+1$}-1$; $=$; $a{times}{exponent $(a^2)$ $2^k-1$}$];
+  array_line [exponent $a$ $2n$; $=$; ${exponent $(a^2)$ $n$}$];
+  array_line [exponent $a$ $2n+1$; $=$; $a{times}{exponent $(a^2)$ $n$}$];
 ]) end}
-If $a$ is read as a type, then $a^n$, is nothing but the type of lists of length $n$ whose elements have type $a$. Depending on the algorithm used to compute the exponential, one gets a different flavour of list. The standard linked lists correspond to the naïve algorithm ${exponent $a$ $k+1$}=a{times}a^k$, which is associated with the unary representation of numbers. Using the algorithm above, we restrict the lists to have length $2^k$ and the shape is more unusual. Generalising to an arbitrary $k$, we obtain the (non-uniformly recursive) datatype, which we shall call {emph"power lists"}:
+Okasaki~{cite"Okasaki1999"~extra:"Chapter 10"} uses a non-uniform inductive type to encode the latter exponentiation algorithm into a type of lists he calls {emph"binary lists"}. We are only interested in lists of length $2^k-1$, that is a length written only with the digit $1$ in binary representation. So following Okasaki, but skipping the second equation (which corresponds to the digit $0$) we define the following non-uniform inductive type, which we call {emph"power lists"}:
 {display"<#module PowerList = struct
 
   type 'a t =
@@ -121,7 +123,7 @@ If $a$ is read as a type, then $a^n$, is nothing but the type of lists of length
 
 end#>"}
 
-The analogy between flavours of lists and numerical representation goes back to Guibas \& al. in~{cite"Guibas1977"} and is pushed further by Myers in~{cite"Myers1983"}. A thorough exploration of this correspondence is conducted by Okasaki in~{cite"Okasaki1999"}(*arnaud: add relevant chapters*) where he introduces the idea of using non-uniform inductive datatypes in the context of numerical representations. As a matter of fact, the type of power lists actually appears in~{cite"Okasaki1999"} as a pedagogical introduction to non-uniformly recursive lists. Relatedly, Okasasi uses, in~{cite"Okasaki1999a"}, a non-uniform recursive datatype to devise a type containing only square matrices, it is also based on numerical representations and uses a tail-recursive exponentiation.
+This type actually appears in Okasaki~{cite"Okasaki1999"~extra:"Chapter 10"} as an introduction to non-uniform binary lists. Relatedly, Okasaki~{cite"Okasaki1999a"} leverages a tail-recursive binary exponentiation algorithm to define a type capturing precisely square matrices; on the other hand, Myers~{cite"Myers1983"} introduced a flavour of list based on {emph"skew binary numbers"} which are not easily captured as exponentiation.
 
 Although the power lists may look like some sort of trees, it is not a very accurate depiction. The easiest way to picture how power lists works is to see <#TwicePlusOne#> as a fancy <#(::)#>, then the lists with, respectively, $1$, $3$, $7$, and $15$ elements are as follows:
 {itemize [
