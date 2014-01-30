@@ -362,7 +362,6 @@ Where <@g×f@> is the function which maps <@(x,y)@> to <@(g x,f y)@>.
 The rest follows straightforwardly, and we can define the following functions which conclude the algorithm (<@BL@>, <@PL@>, and <@APL@> stand for <@BinaryList@>, <@PowerList@>, and <@AlternatingPowerList@> respectively):
 {display"<@Module AlternatingPowerList.
   @{module_elipsis}@
-  
   Definition of_binary_list {A Odd Even}
       (d:Odd) (f:A->Odd) (g:A->Even) (l:BL.T A) : U Odd Even :=
     match l with
@@ -379,10 +378,9 @@ The rest follows straightforwardly, and we can define the following functions wh
       (d:Odd) (f:A->Odd) (g:A->Even) (l:list A) : U Odd Even :=
     of_binary_list d f g (BL.of_list l).
 
-End AlternatingPowerList.@>"}
+End AlternatingPowerList.
 
-
-{display"<@Definition singleton {A:Type} (x:A) : FullTree A 1 :=
+Definition singleton {A:Type} (x:A) : FullTree A 1 :=
   Node Leaf₀ x Leaf₀.
 
 Definition balance {A:Type} (l:list A) : { k:nat & FullTree A k } :=
