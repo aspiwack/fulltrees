@@ -52,17 +52,15 @@ A single traversal, encoded by <#pass : 'a tree_or_elt list -> 'a tree_or_elt_li
 
 {display"<#let join left node right = Tree (Node (left, node, right))
 
-let rec pass list = match  list with
-  | Tree left :: Elt root :: Tree right :: Elt e :: others ->
-      join left root right :: Elt e :: pass others
+let rec pass = function
+  | Tree left :: Elt root :: Tree right :: Elt e :: others -> join left root right :: Elt e :: pass others
   | [Tree left; Elt root; Tree right] -> [join left root right]
   | _ -> assert false
 
-let rec loop list = match list with
+let rec loop = function
   | [] -> Leaf
   | [Tree t] -> t
-  | list -> loop (pass list)
-#>"}
+  | list -> loop (pass list)#>"}
 
 Notice how the invariant that alternating lists have length $2^k-1$ is maintained: this is because, for $k {geqslant} 2$, we have $2^k - 1 = 4 {times} ({exponent $2$ $k-2$} - 1) + 3$, hence we obtain an alternating list of length $2 {times} ({exponent $2$ $k-2$} - 1) + 1 = {exponent $2$ $k-1$} - 1$.
 
