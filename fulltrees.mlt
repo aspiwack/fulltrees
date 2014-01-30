@@ -430,7 +430,8 @@ open Llncs
 
 let inria = new_institution "Inria Paris-Rocquencourt\\{textsc"Ens"}, 45 rue d'Ulm,
  75230 Paris Cedex 05, France"
-let amu = new_institution "Aix-Marseille University"
+let amu = new_institution "Laboratoire d'Informatique Fondamentale de Marseille,\\
+ Aix-Marseille University"
 
 let title = {
   title = "Balancing lists: a proof pearl";
