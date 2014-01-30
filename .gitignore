@@ -9,6 +9,10 @@ _build
 *.annot
 *.cmi
 *.cmo
+*.cmx
+*.cmxs
+*.native
+*.o
 
 #coq
 *.glob
