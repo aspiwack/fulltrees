@@ -1,3 +1,8 @@
+(** Contains the final proof: [balance lst] preserves the order of
+    [lst]. The proof is mostly straightforward. We first define a
+    simple tactic, then most proofs only require very limited user
+    intervention. *)
+
 Require Import Coq.Lists.List.
 Import ListNotations.
 Require Import Full.
@@ -8,6 +13,17 @@ Module APL := AlternatingPowerList.
 
 Notation "f '+++' g" := (fun xy => let '(x,y) := xy in f x ++ g y)
                       (at level 60, right associativity).
+
+(** The automation tactic is very simple: it introduces as many
+    hypotheses as it can, destruct every hypothesis of type [A*B],
+    rewrites with all the hypotheses and with the [simplify] base,
+    applies the [simpl] reduction strategy, and tries to end the proof
+    with [reflexivity] (and repeats until no further progress is
+    made).
+
+    The tactic [easy] is redefined as this strategy, hence the [now]
+    tactical calls it. We also define a [simplify] tactic which does
+    the only the rewriting and reduction. *)
 
 Hint Rewrite app_nil_r app_comm_cons : simplify.
 Hint Rewrite <- app_assoc : simplify.
@@ -52,8 +68,12 @@ Ltac easy ::=
   ]
 .
 
+(** End of the tactic definitions *)
+
 (** In this file we show that the order of the element of the list is
-    indeed preserved by the transformations. *)
+    indeed preserved by the transformations. For each intermediary
+    structure we define a traversal, and prove that each step
+    preserves the traversal. *)
 Fixpoint list_of_full_tree_n {A n} (t:FullTree A n) : list A :=
   match t with
   | Leaf₀ => []
@@ -66,10 +86,26 @@ Definition list_of_full_tree {A} (t:{ n:nat & FullTree A n }) : list A :=
   list_of_full_tree_n (projT2 t)
 .
 
+(** [balance_preserves_order] is the main theorem, the proof is
+    provided at the end of the file. The rest of the file is dedicated
+    to the intermediate lemma. *)
+
 Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l.
 
 
 
+  (** In the intermediary structures, it is necessary to take an extra
+      arguments to the traversal, which is represents the traversal of
+      the elements.  Indeed in a binary list of the form [BL.tpo x l],
+      [l] has type [BL.T (A*A)], but we intend [list_of_binary_list l]
+      to be of type [list A], changing the pairs [(x,y)] into the list
+      [[x;y]].
+
+      This will be even more true of power lists later, in which the
+      elements are supposed to be trees.
+
+      The "+++" notation corresponds to traversal of pairs, it is
+      defined at the beginning of the file. *)
   Fixpoint list_of_binary_list {A B} (f:A->list B) (l:BL.T A) : list B :=
     match l with
     | BL.zero => []
@@ -235,12 +271,14 @@ Theorem balance_preserves_order A (l:list A) : list_of_full_tree (balance l) = l
       easy.
   Qed.
 
+(** Proof of the main theorem: [balance_preserves_order] *)
 Proof.
-  (** Proof of the theorem *)
   unfold balance, list_of_full_tree.
   remember (Full.APL.of_list Leaf₁ singleton (fun x : A => x) l) as l' eqn:h.
   destruct l' as [ [ | x ] l' ]; simpl.
-  { destruct l.
+  { (** This last intermediary lemma states that for any list [l], if
+        its completion is empty, then [l] is empty. *)
+    destruct l.
     + easy.
     + elimtype False.
       destruct l'.
