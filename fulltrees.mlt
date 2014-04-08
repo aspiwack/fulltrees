@@ -36,7 +36,7 @@ In Sections~{ref_ s_ocaml} and~{ref_ s_coq} we show refinements of the algorithm
 
 let algo = "{section"A balancing algorithm" ~label:s_algo}
 
-We start by giving a first, simple, implementation of the balancing algorithm. The heart of the algorithm relies on using an alternating list of length ${exponent $2$ $k$}-1$, where odd-position elements are trees and even-position elements are labels, of type <#'a#>.  A full tree of height $k$ can be decomposed into the first $k-1$ levels, containing ${exponent $2$ $k-1$} -1$ internal nodes, and the $k$th level, which contains both nodes and leaves. Thus, the ${exponent $2$ $k-1$} - 1$ labels in the alternating list will be used to label the internal nodes in the $k-1$ first levels of the balanced tree, while the ${exponent $2$ $k-1$}$ trees, all of height at most one at first, will constitute the level $k$.
+We start by giving a first, simple, implementation of the balancing algorithm. The heart of the algorithm relies on using an alternating list of length ${exponent $2$ $k$}-1$, where odd-position elements are trees and even-position elements are labels, of type <#'a#> (indices starting from 1).  A full tree of height $k$ can be decomposed into the first $k-1$ levels, containing ${exponent $2$ $k-1$} -1$ internal nodes, and the $k$th level, which contains both nodes and leaves. Thus, the ${exponent $2$ $k-1$} - 1$ labels in the alternating list will be used to label the internal nodes in the $k-1$ first levels of the balanced tree, while the ${exponent $2$ $k-1$}$ trees, all of height at most one at first, will constitute the level $k$.
 
 Though we could encode labels as trees of height one in the alternating list, we rather use an appropriate type for the sake of readability:
 
