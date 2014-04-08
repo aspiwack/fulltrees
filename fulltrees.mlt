@@ -298,7 +298,7 @@ The algorithm indeed builds only full trees.
 
 The padding conversion from lists to power lists, in Section~{ref_ s_ocaml}, is not structural due to the use of <#pair_up#> in the recursive call. To tackle this recursion, we shall make use of another intermediate structure. What we need, essentially, is that all the calls to <#pair_up#> are pre-calculated, so the intermediate structure will be like <#parity#> except that the calls to <#('a*'a) list#> are replaced by inductive calls.
 
-As it turns out, this is another non-uniform datatype which corresponds to a numerical representation. Indeed, any natural number can be written in binary with digits $1$ and $2$ (but not $0$). In this system, for example, $8$ is represented as $112$. Here is the definition, where <@tpo@> reads ``twice plus one'' and <@tpt@> ``twice plus two'':
+As it turns out, this is another non-uniform datatype which corresponds to a numerical representation. Indeed, any natural number can be written in binary with digits $1$ and $2$ (but not $0$). In this system, for example, $8=1{times}2^2+1{times}2^1+2{times}2^0$ is represented as $112$. Here is the definition, where <@tpo@> reads ``twice plus one'' and <@tpt@> ``twice plus two'':
 {display"<@Module BinaryList.
 
   Inductive T (A:Type) : Type :=
