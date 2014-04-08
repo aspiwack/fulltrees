@@ -53,7 +53,8 @@ A single traversal, encoded by <#pass : 'a tree_or_elt list -> 'a tree_or_elt_li
 {display"<#let join left node right = Tree (Node (left, node, right))
 
 let rec pass = function
-  | Tree left :: Elt root :: Tree right :: Elt e :: others -> join left root right :: Elt e :: pass others
+  | Tree left :: Elt root :: Tree right :: Elt e :: others ->
+      join left root right :: Elt e :: pass others
   | [Tree left; Elt root; Tree right] -> [join left root right]
   | _ -> assert false
 
