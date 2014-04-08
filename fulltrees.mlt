@@ -455,6 +455,8 @@ let packages = [
 
 let prelude = concat_with_sep [
   usepackage "hyperref";
+  text\"\\\\let\\\\oldampersand\\\\&\";
+  text\"\\\\renewcommand*\\\\&{{\\\\itshape\\\\oldampersand}}\";
   command \"bibliographystyle\" [T,"splncs"] T;
 ] par
 
