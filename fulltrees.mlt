@@ -29,7 +29,7 @@ Starting with a list <#lst#>, we want to turn it into a binary tree <#tr#> of th
 
 With the constraints that <#lst#> must be the infix traversal of <#tr#> and that <#tr#> must be {emph"full"}, in the sense that every level except the last are required to be completely filled. Such a function turns, in particular, sorted lists into balanced binary search trees.
 
-There are a number of algorithms to achieve this result in linear time. Here we consider an algorithm, presented in Section~{ref_ s_algo}, which repeatedly pairs up trees of height $h$ in a list to form a list of trees of height $h+1$. Our interest in this algorithm sprouts from the fact that its correctness is not obvious; in particular the invariants are complex: the main loop operates on a list of length $2^k-1$ whose elements are alternately of two distinct forms.
+There are a number of folklore algorithms to achieve this result in linear time. Here we consider one of these algorithms, presented in Section~{ref_ s_algo}, which repeatedly pairs up trees of height $h$ in a list to form a list of trees of height $h+1$. Our interest in this algorithm sprouts from the fact that its correctness is not obvious; in particular the invariants are complex: the main loop operates on a list of length $2^k-1$ whose elements are alternately of two distinct forms.
 
 In Sections~{ref_ s_ocaml} and~{ref_ s_coq} we show refinements of the algorithm where the invariants are pushed into the types, leading to a complete and short proof of correctness in Coq.
 "
