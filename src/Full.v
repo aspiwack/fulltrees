@@ -4,6 +4,7 @@
 Require Import Coq.Lists.List.
 Import ListNotations.
 
+Local Open Scope type_scope.
 Notation "⟨ x , y ⟩" := (existT _ x y).
 Notation "f × g" := (fun xy => let '(x,y) := xy in (f x,g y))
                       (at level 40, left associativity).
@@ -77,7 +78,7 @@ Module PowerList.
   Fixpoint T (A:Type) (k:nat) :=
     match k with
     | 0 => unit:Type
-    | S k' => (A * T (A*A) k')%type
+    | S k' => A * T (A*A) k'
     end
   .
 

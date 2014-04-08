@@ -260,7 +260,7 @@ At a superficial level, a visible difference with the Ocaml implementation is th
   Fixpoint T (A:Type) (k:nat) :=
     match k with
     | 0 => unit:Type
-    | S k' => (A * T (A*A) k')%type
+    | S k' => A * T (A*A) k'
     end.
 
 End PowerList.@>"}
