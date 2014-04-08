@@ -103,7 +103,7 @@ Let us focus first on the length invariants: we will need to define a type which
 
 A data structure which holds $2^k-1$ elements brings complete binary trees to mind. Even if it is possible -- though not necessary convenient -- to represent complete binary trees in Ocaml, they are not the appropriate structure. First, because complete binary trees are full trees and are, hence, unlikely to serve as a useful intermediate data structure to build a full tree. Second because there is a simpler -- albeit more exotic -- alternative.
 
-Indeed, lists can be seen as decorated unary numbers: there is an element at each successor. Different kinds of lists can be obtained, more or less systematically, by varying the numerical representation. This idea goes back to Guibas \& al. in~{cite"Guibas1977"} and a fairly thorough exploration can be found in Okasaki~{cite"Okasaki1999"~extra:"Chapters 9\&10"}. In the simplest cases, the analogous list structure corresponds to a structurally recursive exponentiation algorithm. For regular lists, a list of size $n$ can be recursively defined with the following equations:
+Indeed, lists can be seen as decorated unary numbers: there is an element at each successor. Different kinds of lists can be obtained, more or less systematically, by varying the numerical representation. This idea goes back to Guibas \& al. in~{cite"Guibas1977"} and a fairly thorough exploration can be found in Okasaki~{cite"Okasaki1999"~extra:"Chapters 9\&10"}. In the simplest cases, the analogous list structure corresponds to a structurally recursive exponentiation algorithm. For regular lists, a list of size $n$ whose elements have type $a$ can be recursively defined with the following equations:
 {displaymath begin just_left `Brace (array [`L;`L;`L] [
   array_line [${exponent $a$ $0$}$;$=$;$1$];
   array_line [${exponent $a$ $n+1$}$;$=$;$a{times}a^n$];
@@ -114,7 +114,7 @@ Replacing unary numbers with binary numbers, we obtain the binary exponentiation
   array_line [exponent $a$ $2n$; $=$; ${exponent $(a^2)$ $n$}$];
   array_line [exponent $a$ $2n+1$; $=$; $a{times}{exponent $(a^2)$ $n$}$];
 ]) end}
-Okasaki~{cite"Okasaki1999"~extra:"Chapter 10"} uses a non-uniform inductive type to encode the latter exponentiation algorithm into a type of lists he calls {emph"binary lists"}. We are only interested in lists of length $2^k-1$, that is a length written only with the digit $1$ in binary representation. So following Okasaki, but skipping the second equation (which corresponds to the digit $0$) we define the following non-uniform inductive type, which we call {emph"power lists"}:
+Okasaki~{cite"Okasaki1999"~extra:"Chapter 10"} uses a non-uniform inductive type to encode the latter exponentiation algorithm into a type of lists he calls {emph"binary lists"}. We are only interested in lists of length $2^k-1$, that is a length written only with the digit $1$ in binary representation. So following Okasaki, but skipping the second equation above (which corresponds to the digit $0$) we define the following non-uniform inductive type, which we call {emph"power lists"}:
 {display"<#module PowerList = struct
 
   type 'a t =
