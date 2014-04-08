@@ -424,8 +424,7 @@ let d = concat [
 
 open Llncs
 
-let inria = new_institution "Inria Paris-Rocquencourt\\{textsc"Ens"}, 45 rue d'Ulm,
- 75230 Paris Cedex 05, France"
+let inria = new_institution "Inria Paris-Rocquencourt\\{textsc"Ens"}, Paris, France"
 let amu = new_institution "Aix Marseille Université, CNRS, LIF UMR 7279, 13288, Marseille, France"
 
 let title = {
