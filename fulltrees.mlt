@@ -27,7 +27,7 @@ Starting with a list <#lst#>, we want to turn it into a binary tree <#tr#> of th
   | Node of 'a tree * 'a * 'a tree
   | Leaf#>"}
 
-With the constraints that <#lst#> must be the infix traversal of <#tr#> and that <#tr#> must be {emph"full"}, in the sense that every level except the last are required to be completely filled. Such a function turns, in particular, sorted list into balanced binary search trees.
+With the constraints that <#lst#> must be the infix traversal of <#tr#> and that <#tr#> must be {emph"full"}, in the sense that every level except the last are required to be completely filled. Such a function turns, in particular, sorted lists into balanced binary search trees.
 
 There are a number of algorithms to achieve this result in linear time. Here we consider an algorithm, presented in Section~{ref_ s_algo}, which repeatedly pairs up trees of height $h$ in a list to form a list of trees of height $h+1$. Our interest in this algorithm sprouts from the fact that its correctness is not obvious; in particular the invariants are complex: the main loop operates on a list of length $2^k-1$ whose elements are alternately of two distinct forms.
 
@@ -36,7 +36,7 @@ In Sections~{ref_ s_ocaml} and~{ref_ s_coq} we show refinements of the algorithm
 
 let algo = "{section"A balancing algorithm" ~label:s_algo}
 
-We start by giving a first, simple, implementation of the balancing algorithm. The heart of the algorithm relies on using an alternating list of length ${exponent $2$ $k$}-1$, where odd-position elements are trees and even-position elements are labels, of type <#'a#>.  A full tree can be decomposed into the first $k-1$ levels, containing ${exponent $2$ $k-1$} -1$ internal nodes, and the $k$th level, which contains both nodes and leaves. Thus, the ${exponent $2$ $k-1$} - 1$ labels in the alternating list will be used to label the internal nodes in the $k-1$ first levels of the balanced tree, while the ${exponent $2$ $k-1$}$ trees, all of height at most one at first, will constitute the level $k$.
+We start by giving a first, simple, implementation of the balancing algorithm. The heart of the algorithm relies on using an alternating list of length ${exponent $2$ $k$}-1$, where odd-position elements are trees and even-position elements are labels, of type <#'a#>.  A full tree of height $k$ can be decomposed into the first $k-1$ levels, containing ${exponent $2$ $k-1$} -1$ internal nodes, and the $k$th level, which contains both nodes and leaves. Thus, the ${exponent $2$ $k-1$} - 1$ labels in the alternating list will be used to label the internal nodes in the $k-1$ first levels of the balanced tree, while the ${exponent $2$ $k-1$}$ trees, all of height at most one at first, will constitute the level $k$.
 
 Though we could encode labels as trees of height one in the alternating list, we rather use an appropriate type for the sake of readability:
 
@@ -101,7 +101,7 @@ Our goal in this section is to avoid resorting to <#assert false#>. In addition 
 To achieve this goal, it is necessary to have more precise types.
 Let us focus first on the length invariants: we will need to define a type which contains exactly the non-empty lists of length $2^k-1$.
 
-A data structure which holds $2^k-1$ elements brings complete binary trees to mind. Even though it is possible -- though not necessary convenient -- to represent complete binary trees in Ocaml, they are not the appropriate structure. First, because complete binary trees are full trees and are, hence, unlikely to serve as a useful intermediate data structure to build a full tree. Second because there is a simpler -- albeit more exotic -- alternative.
+A data structure which holds $2^k-1$ elements brings complete binary trees to mind. Even if it is possible -- though not necessary convenient -- to represent complete binary trees in Ocaml, they are not the appropriate structure. First, because complete binary trees are full trees and are, hence, unlikely to serve as a useful intermediate data structure to build a full tree. Second because there is a simpler -- albeit more exotic -- alternative.
 
 Indeed, lists can be seen as decorated unary numbers: there is an element at each successor. Different kinds of lists can be obtained, more or less systematically, by varying the numerical representation. This idea goes back to Guibas \& al. in~{cite"Guibas1977"} and a fairly thorough exploration can be found in Okasaki~{cite"Okasaki1999"~extra:"Chapters 9\&10"}. In the simplest cases, the analogous list structure corresponds to a structurally recursive exponentiation algorithm. For regular lists, a list of size $n$ can be recursively defined with the following equations:
 {displaymath begin just_left `Brace (array [`L;`L;`L] [
@@ -162,7 +162,7 @@ After the first element, which must have type <#'odd#>, there is no difference b
 
 end#>"}
 
-For concision, let us write <#PL#> and <#APL#> for <#PowerList#> and <#AlternatingPowerList#> respectively.
+For brevity, let us write <#PL#> and <#APL#> for <#PowerList#> and <#AlternatingPowerList#> respectively.
 
 Using these alternating power lists, we can define a version of the <#pass#> function free of <#assert false#>. Indeed, consider an alternating power list of length at least $3$:  it is of the form <#APL.TwicePlusOne (a, PL.TwicePlusOne ((b,c), lst))#>, where <#lst#> has type <#(('even*'odd)*('even*'odd)) PowerList.t#>. The <#pass#> function of Section~{ref_ s_algo}, as it happens, manipulates its arguments by groups of four elements: basically, <#pass#> is simply a <#map#> over <#lst#>.
 
@@ -324,7 +324,7 @@ To turn a non-empty list into a <@BinaryList.T@>, all we need is a function <@co
 End BinaryList.@>"}
 Note that while <@cons@> takes, in the worst case, logarithmic time with respect to the length of the list, building a list by repeatedly using <@cons@> is still linear. Indeed, as previously mentioned, <#cons#> mimics the successor algorithm for binary numbers, whose amortized complexity is well-known to be constant.
 
-We also need a function which turns a <@T (A*A)@> into a <@T A@>. This is effectively multiplication by $2$. The lack of $0$ among the digits{footnote"The constructor <@zero@> represents an empty list of digits."} makes this process recursive. A simple presentation of the duplication algorithm consists in adding a $0$ at the end of the number, then eliminating the $0$ using the following equalities:
+We also need a function which turns a <@T (A*A)@> into a <@T A@>. This is effectively multiplication by $2$. The lack of $0$ among the digits{footnote"The constructor <@zero@> represents an empty list of digits."} makes this process recursive. A simple presentation of the doubling algorithm consists in adding a $0$ at the end of the number, then eliminating the $0$ using the following equalities:
 {displaymath begin just_left `Brace (array [`C;`L;`C] [
   array_line [$0$   ; $=$ ; cdot ];
   array_line [$x20$ ; $=$ ; $x12$];
