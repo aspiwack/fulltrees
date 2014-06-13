@@ -427,8 +427,12 @@ open Llncs
 let inria = new_institution "Inria Paris-Rocquencourt\\{textsc"Ens"}, Paris, France"
 let amu = new_institution "Aix Marseille Université, CNRS, LIF UMR 7279, 13288, Marseille, France"
 
+
+let funding =
+  "This research has received funding from the European Research Council under the FP7 grant agreement 278673, Project MemCAD"
+
 let title = {
-  title = "Balancing lists: a proof pearl";
+  title = "Balancing lists: a proof pearl{command\"thanks\" [A,funding] A}";
   running_title = Some"Balancing lists"
 }
 
