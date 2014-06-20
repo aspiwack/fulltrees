@@ -30,6 +30,11 @@ val cite : ?extra:Latex.t -> Latex.t -> Latex.t
 
 val citation_needed : Latex.t
 
+(*** Include graphics ***)
+
+val includegraphics : ?height:Latex.size -> ?width:Latex.size -> ?keepaspectratio:bool
+  -> Latex.t -> Latex.t
+
 (*** Memoir (very incomplete) ***)
 
 val document : ?options:Latex.t list -> ?prelude:Latex.t
@@ -69,8 +74,3 @@ val put : 'a Iterator.t -> ?prefix:Latex.t -> 'a Frame.t -> Slide.t
 val title_put : 'a Iterator.t -> ?prefix:Latex.t -> 'a Frame.t -> Slide.t
 
 val tighttiny : Latex.t -> Latex.t
-
-
-
-
-

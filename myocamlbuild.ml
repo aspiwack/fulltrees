@@ -9,7 +9,7 @@ open Ocamlbuild_plugin
 open Command
 
 (*** Mode for Mlpost ***)
-let mode = `Cairo
+let mode = `Mps
 let mode = match mode with
   | `Mps -> A"-mps"
   | `Cairo -> A"-cairo"
@@ -21,7 +21,7 @@ let plugins = ["util/coqdoc.cmxs";]
 let meltdep = []
 
 (*** List of extra dependencies on the .tex file compilation ***)
-let texdeps = ["llncs.cls";"splncs.bst";"library.bib";"style.tex";"coq_logo.png";"header_bot.png";]
+let texdeps = ["llncs.cls";"splncs.bst";"library.bib";"style.tex";"coq_logo.png";"header_bot.png";"okasaki.png";]
 
 (*** Global constants ***)
 

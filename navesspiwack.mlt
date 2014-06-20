@@ -19,6 +19,164 @@ let packages = [
   "inputenc" , "utf8" ;
 ]
 
+(** printing the intermediate structures of the algorithm with mlpost *)
+
+type 'a tree =
+| Node of 'a tree * 'a * 'a tree
+| Leaf
+
+type 'a alt =
+| Pivot of 'a
+| Tree of 'a tree
+
+module Algo = struct
+
+  open Mlpost
+
+  (** parameters *)
+  let bsize = Num.cm 1.
+  let height = bsize
+  let width = bsize
+  let textsize = huge
+  let treesep = Num.cm 1.
+  let treebase_color = Color.mediumgray
+
+  (** basic boxes *)
+  let emptyb ?fill () =
+    Box.empty ?fill ~height ~width ()
+  let numb ?fill i =
+    let i' = textsize (mode M (latex_of_int i)) in
+    let () = Format.printf \"%s@.\" (Latex.to_string i') in
+    let i'' = Melt.picture_of_latex i' in
+    Box.pic ?fill i''
+
+  (** Make all boxes the same size then draw their borders. *)
+  let normalize l =
+    Box.same_height (Box.same_width l) |>
+    List.map (fun b -> Box.rect ~dx:0. ~dy:0. b)
+
+  (** Draws a list of numbers. *)
+  let pr_int_list l =
+    emptyb ()::List.map numb l |>
+    normalize |> (* uses emptyb to normalize the box size. *)
+    List.tl |>
+    Box.hbox
+
+  (** Draws a tree bottom up *)
+  let rec tree_height = function
+    | Leaf -> 0
+    | Node (l,_,r) -> 1+max (tree_height l) (tree_height r)
+
+  let rec expint a = function
+    | 0 -> 1
+    | n when n mod 2 = 0 -> expint (a*a) (n/2)
+    | n -> a*(expint (a*a)) (n/2)
+
+  let base_size t =
+    let h = tree_height t in
+    (expint 2 h) - 1
+
+  let rec tree_map f = function
+    | Node(l,x,r) -> Node (tree_map f l , f x , tree_map f r)
+    | Leaf -> Leaf
+
+  (* precondition: [base_size t = List.length ps] *)
+  let assign_base_depth ps t =
+    assert (base_size t = List.length ps);
+    let push x (l,y,r) = (x::l,y,r) in
+    let rec split_at n = function
+      | a::l when n > 0 -> push a (split_at (n-1) l)
+      | a::l when n = 0 -> ([],a,l)
+      | _ -> assert false
+    in
+    let rec assign_base_depth ps size d = function
+      | Node (l,x,r) ->
+        let hsize = (size - 1)/2 in
+        let (pl,a,pr) = split_at hsize ps in
+        Node (
+          assign_base_depth pl hsize (d+1) l ,
+          (a,d,x) ,
+          assign_base_depth pr hsize (d+1) r )
+      | Leaf -> Leaf
+    in
+    assign_base_depth ps (base_size t) 0 t
+
+  let pr_int_tree ps t =
+    let at = assign_base_depth ps t in
+    let h = tree_height t in
+    let pos_of_bd p d =
+      let height = h - d in
+      Point.shift p Point.(mult (Num.multf (float_of_int height) treesep) up)
+    in
+    let placed_t =
+      tree_map begin fun (p,d,x) ->
+        numb x |>
+        Box.center (pos_of_bd p d)
+      end at
+    in
+    let arrow_style = Arrow.(add_line empty) in
+    (** [p] is the parent box *)
+    let rec draw_arrows p = function
+      | Leaf -> Command.nop
+      | Node (l,x,r) ->
+        let open Command in
+        draw_arrows x l ++
+        Arrow.box_to_box ~kind:arrow_style p x ++
+        draw_arrows x r
+    in
+    let arrows =
+      match placed_t with
+      | Leaf -> Command.nop
+      | Node (l,x,r) -> Command.(draw_arrows x l ++ draw_arrows x r)
+    in
+    let rec draw_boxes = function
+      | Leaf -> Command.nop
+      | Node (l,x,r) ->
+        let open Command in
+        draw_boxes l ++
+        Box.draw x ++
+        draw_boxes r
+    in
+    Command.(draw_boxes placed_t ++ arrows)
+
+  let pr_alt_list l =
+    let rec genempty n =
+      if n = 0 then []
+      else (emptyb ~fill:treebase_color ()) :: genempty (n-1)
+    in
+    let rec gen_base = function
+      | Pivot i :: l ->
+        let (r,q) = gen_base l in
+        numb i ::r , q
+      | Tree t :: l ->
+        let tq = genempty(base_size t) in
+        let (r,q) = gen_base l in
+        tq @ r , (t,tq)::q
+      | [] -> [],[]
+    in
+    let (base,queue) = gen_base l in
+    let base =
+      normalize (base) |>
+      Box.hbox
+    in
+    let trees =
+      List.map begin fun (t,q) ->
+        let ps =
+          List.map begin fun b ->
+            Box.ctr (Box.sub b base)
+          end q
+        in
+        pr_int_tree ps t
+      end queue
+    in
+    let open Command in
+    Box.draw base ++
+    seq trees
+
+end
+
+(** /algo *)
+
 
 
 let doc = ([
@@ -27,15 +185,79 @@ let doc = ([
           ^^ newline_size (`Mm 6.) ^^ large2"Guyslain Naves \& Arnaud Spiwack"
   )end;
 
-  put (list[1]) begin frame (fun _ ->
-    "<@Module BinaryList.
+  put (list[1]) begin frame ~title:"Have you read this book?" (fun _ ->
+    center (includegraphics ~height:Slides.(unit (height*.0.75)) "okasaki.png")
+  )end;
 
-  Inductive T (A:Type) : Type :=
-  | zero
-  | tpo (a:A) (l:T (A*A))
-  | tpt (a b: A) (l:T (A*A)).
+  put (list[1]) begin frame ~title:"Lists as exponentiation" (fun _ ->
+    "List of size $n$: type exponentiation $A^n$
+     {displaymath (just_left `Brace (array [`L;`L;`L] [
+       array_line [$A^0$;$=$;$1$];
+       array_line [exponent$A$ $n+1$;$=$;$A{times}A^n$];
+     ]))}{newline_size(`Mm 4.)}
 
-End BinaryList.@>"
+     Example:
+     {displaymath$[1;2;3;4;5;6;7;8;9;10;11]$}"
+  )end;
+
+  put (list[1]) begin frame ~title:"Lists as fast exponentiation" (fun _ ->
+    "List of size $n$: still type exponentiation $A^n$
+     {displaymath (just_left `Brace (array [`L;`L;`L] [
+       array_line [$A^0$;$=$;$A$];
+       array_line [exponent$A$ $2n$;$=$;$(A{times}A)^n$];
+       array_line [exponent$A$ $2n+1$;$=$;$A{times}(A{times}A)^n$];
+     ]))}{newline_size(`Mm 4.)}
+
+     Example ($11 = {overline$1101$}^2$):
+     {let thin = text\"\\\\,\" in
+       displaymath$[1;(2,3);{thin^^cdot^^thin};(((4,5),(6,7)),((8,9),(10,11)))]$}"
+  )end;
+
+  put (list[1]) begin frame ~title:"Binary list datatype" (fun _ ->
+    "{array [`L;`Vert;`L;`L] [
+      array_line ~layout:[3,`L] ["<@Inductive BList (A:Type) : Type :=@>"];
+      array_line ["";"<@zero@>";""];
+      array_line ["";"<@twice@>";"<@(l:BList (A*A))@>"];
+      array_line ["";"<@tpo@>";"<@(a:A) (l:BList (A*A)).@>"];
+    ]}"
+  )end;
+
+  put (list[1]) begin frame ~title:"From list to trees" (fun _ ->
+    let open Mlpost in
+    (* let mlplatex = Melt.picture_of_latex in *)
+    (* let bsize = Num.cm 1. in let height = bsize and width = bsize in *)
+    (* let textsize = huge in *)
+    (* let emptyb ?fill () = *)
+    (*   Box.empty ~height ~width () *)
+    (* in *)
+    (* let numb ?fill i = *)
+    (*   let i' = textsize (mode M (latex_of_int i)) in *)
+    (*   let () = Format.printf \"%s@.\" (Latex.to_string i') in *)
+    (*   let i'' = Melt.picture_of_latex i' in *)
+    (*   (\* Box.tex ~stroke:(Some Color.black) (\\* ~height ~width *\\) i' *\) *)
+    (*   Box.pic i'' *)
+    (* in *)
+    (* let normalize l = *)
+    (*   Box.same_height (Box.same_width l) |> *)
+    (*   List.map (fun b -> Box.rect ~dx:0. ~dy:0. b) *)
+    (* in *)
+    mlpost begin
+      (* [emptyb();emptyb(); numb 1; numb 2 ] |> *)
+      (* normalize |> *)
+      (* Box.hbox |> *)
+      (* Box.draw (Algo.pr_int_list [1;2;3;4;5;6;7]) *)
+      let next p = Point.shift p Point.(mult (Num.cm 1.) right) in
+      let rec gen n =
+        if n <= 0 then []
+        else Point.origin :: (List.map next (gen (n-1)))
+      in
+      let s n = Node(Leaf,n,Leaf) in
+      let t1 = Node (s 1 , 2 , Node (s 3,4,s 5)) in
+      let t2 = Node (s 1 , 2 , s 3) in
+      (* Algo.pr_int_tree (gen 7) t1 *)
+      (* Algo.pr_int_tree (gen 3) t2 *)
+      Algo.pr_alt_list [Tree t1;Pivot 6; Tree t2]
+    end
   )end;
 ])
 
