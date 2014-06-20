@@ -1,0 +1,61 @@
+(* -*- compile-command: "ocamlbuild -classic-display navesspiwack.pdf"  -*- *)
+
+open Mlpost
+open Latex
+open Slides.Iterator
+open Prelude
+
+##plugin coqdoc
+##verbatim '@' = coqdoc
+##verbatim '#' = ocaml_code
+
+
+let prelude = concat_with_sep [
+  input "style.tex";
+  color_prelude;
+] par
+
+let packages = [
+  "inputenc" , "utf8" ;
+]
+
+
+
+let doc = ([
+  title_put (list [1]) begin title_frame (fun _ ->
+    textbf (huge2 "Balancing lists" ^^ newline ^^ large3"A proof pearl")
+          ^^ newline_size (`Mm 6.) ^^ large2"Guyslain Naves \& Arnaud Spiwack"
+  )end;
+
+  put (list[1]) begin frame (fun _ ->
+    "<@Module BinaryList.
+
+  Inductive T (A:Type) : Type :=
+  | zero
+  | tpo (a:A) (l:T (A*A))
+  | tpt (a b: A) (l:T (A*A)).
+
+End BinaryList.@>"
+  )end;
+])
+
+
+let file = \"navesspiwack.tex\"
+
+let _ = emit ~file 
+             (Slides.document ~prelude ~packages doc)
+  (* arnaud: rafiner les modes plus tard *)
+
+let _ =
+  let s = Metapost_tool.read_prelude_from_tex_file file  in
+  Defaults.set_prelude s
+
+let _ =
+  Defaults.set_required_files [
+    \"style.tex\"
+  ]
+
+let _ = match Arg.mode with
+	 | `Cairo -> Cairost.dump_pdf ()
+	 | `Mps -> Mps.dump ()
+	 | _ -> assert false

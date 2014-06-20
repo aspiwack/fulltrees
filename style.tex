@@ -1,0 +1,28 @@
+% -*- compile-command: "ocamlbuild -classic-display defence.pdf && evince _build/defence.pdf" -*-
+% Configuration de Latex pour mes slides
+
+
+%%% heading for @ purposes
+\makeatletter
+
+%%% Configuration du & pour qu'il soit en italique
+% peut-être forcer roman et italique sur le &
+
+%\let\oldampersand\&
+%\renewcommand*\&{{\itshape\oldampersand}}
+
+%%% Configuration de la police : Palatino + Text Numerals
+% quelque soit le choix de police, pour une meilleur lecture
+% à l'écran, \usagepackage{fontenc}[T1] est recommandé
+\renewcommand{\rmdefault}{pplj}
+\let\cmoldstylenums\oldstylenums %text numerals in Computer Modern
+\renewcommand{\oldstylenums}[1]{%
+  {\fontfamily{pplj}\selectfont #1}}
+
+% Cancels paragraph indentation (arnaud: should move to Slides)
+\setlength{\parindent}{0pt}
+% Removes page numbering and such (arnaud: should move to Slides)
+\pagestyle{empty}
+
+%%% Footer for @ purposes
+\makeatother

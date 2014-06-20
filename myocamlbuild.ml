@@ -21,7 +21,7 @@ let plugins = ["util/coqdoc.cmxs";]
 let meltdep = []
 
 (*** List of extra dependencies on the .tex file compilation ***)
-let texdeps = ["llncs.cls";"splncs.bst";"library.bib";]
+let texdeps = ["llncs.cls";"splncs.bst";"library.bib";"style.tex";"coq_logo.png";"header_bot.png";]
 
 (*** Global constants ***)
 
