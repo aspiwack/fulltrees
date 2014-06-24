@@ -54,7 +54,7 @@ module Algo = struct
   (** Make all boxes the same size then draw their borders. *)
   let normalize l =
     Box.same_height (Box.same_width l) |>
-    List.map (fun b -> Box.rect ~dx:0. ~dy:0. b) |>
+    List.map (fun b -> Box.rect ~dx:(Num.pt 0.) ~dy:(Num.pt 0.) b) |>
     List.map begin fun b ->
       match Box.get_fill (Box.nth 0 b) with
       | None -> b
