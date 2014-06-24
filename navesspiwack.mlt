@@ -24,9 +24,10 @@ let packages = [
 type 'a tree =
 | Node of 'a tree * 'a * 'a tree
 | Leaf
+| Leaf1
 
 type 'a alt =
-| Pivot of 'a
+| Pivot of bool*'a (** [true] if selected for next step *)
 | Tree of 'a tree
 
 module Algo = struct
@@ -34,11 +35,11 @@ module Algo = struct
   open Mlpost
 
   (** parameters *)
-  let bsize = Num.cm 1.
+  let bsize = Num.cm 0.7
   let height = bsize
   let width = bsize
-  let textsize = huge
-  let treesep = Num.cm 1.
+  let textsize = large3
+  let treesep = Num.cm 0.7
   let treebase_color = Color.mediumgray
 
   (** basic boxes *)
@@ -53,7 +54,12 @@ module Algo = struct
   (** Make all boxes the same size then draw their borders. *)
   let normalize l =
     Box.same_height (Box.same_width l) |>
-    List.map (fun b -> Box.rect ~dx:0. ~dy:0. b)
+    List.map (fun b -> Box.rect ~dx:0. ~dy:0. b) |>
+    List.map begin fun b ->
+      match Box.get_fill (Box.nth 0 b) with
+      | None -> b
+      | Some c -> Box.set_fill c b
+    end
 
   (** Draws a list of numbers. *)
   let pr_int_list l =
@@ -65,6 +71,7 @@ module Algo = struct
   (** Draws a tree bottom up *)
   let rec tree_height = function
     | Leaf -> 0
+    | Leaf1 -> 1
     | Node (l,_,r) -> 1+max (tree_height l) (tree_height r)
 
   let rec expint a = function
@@ -79,6 +86,7 @@ module Algo = struct
   let rec tree_map f = function
     | Node(l,x,r) -> Node (tree_map f l , f x , tree_map f r)
     | Leaf -> Leaf
+    | Leaf1 -> Leaf1
 
   (* precondition: [base_size t = List.length ps] *)
   let assign_base_depth ps t =
@@ -98,6 +106,7 @@ module Algo = struct
           (a,d,x) ,
           assign_base_depth pr hsize (d+1) r )
       | Leaf -> Leaf
+      | Leaf1 -> Leaf1
     in
     assign_base_depth ps (base_size t) 0 t
 
@@ -117,6 +126,7 @@ module Algo = struct
     let arrow_style = Arrow.(add_line empty) in
     (** [p] is the parent box *)
     let rec draw_arrows p = function
+      | Leaf1 -> Command.nop
       | Leaf -> Command.nop
       | Node (l,x,r) ->
         let open Command in
@@ -127,10 +137,12 @@ module Algo = struct
     let arrows =
       match placed_t with
       | Leaf -> Command.nop
+      | Leaf1 -> Command.nop
       | Node (l,x,r) -> Command.(draw_arrows x l ++ draw_arrows x r)
     in
     let rec draw_boxes = function
       | Leaf -> Command.nop
+      | Leaf1 -> Command.nop
       | Node (l,x,r) ->
         let open Command in
         draw_boxes l ++
@@ -145,9 +157,13 @@ module Algo = struct
       else (emptyb ~fill:treebase_color ()) :: genempty (n-1)
     in
     let rec gen_base = function
-      | Pivot i :: l ->
+      | Pivot (b,i) :: l ->
         let (r,q) = gen_base l in
-        numb i ::r , q
+        let fill =
+          if b then Some Color.lightblue
+          else None
+        in
+        numb ?fill i ::r , q
       | Tree t :: l ->
         let tq = genempty(base_size t) in
         let (r,q) = gen_base l in
@@ -172,6 +188,66 @@ module Algo = struct
     let open Command in
     Box.draw base ++
     seq trees
+
+    (** The actual algorithm, in an incremental fashion *)
+
+    (* mostly duplicated from [simple.ml] *)
+
+    type state =
+    | Init of int list
+    | Unmarked of int alt list (** inv bools are all false *)
+    | Marked of int alt list
+
+    let pr_state = function
+      | Init l -> Box.draw (pr_int_list l)
+      | Unmarked l | Marked l -> pr_alt_list l
+
+    let join l x r = Tree(Node(l,x,r))
+
+    let complete list =
+      let n = List.length list in
+      let rec pow2 i = if i <= n then pow2 (2*i) else i in
+      let missing = (pow2 1) - n - 1 in
+      let rec pad missing = function
+        | head::tail when missing <> 0 -> Tree Leaf1 :: Pivot (false,head) :: pad (missing - 1) tail
+        | odd::even::others -> join Leaf odd Leaf :: Pivot(false,even) :: pad 0 others
+        | [single] -> [join Leaf single Leaf]
+        | [] -> []
+      in
+      pad missing list
+
+    let rec select = function
+      | Tree left :: Pivot (false,root) :: Tree right :: Pivot (false,e) :: others ->
+        Tree left :: Pivot (true,root) :: Tree right :: Pivot (false,e) :: select others
+      | [Tree left ; Pivot (false,root) ; Tree right] ->
+        [Tree left ; Pivot (true,root) ; Tree right]
+      | _ -> assert false
+
+    let rec pass = function
+      | Tree left :: Pivot (true,root) :: Tree right :: Pivot (false,e) :: others ->
+        join left root right :: Pivot (false,e) :: pass others
+      | [Tree left; Pivot (true,root); Tree right] -> [join left root right]
+      | _ -> assert false
+
+    let step = function
+      | Init l -> Some (Unmarked (complete l))
+      | Unmarked [Tree _] -> None
+      | Unmarked l -> Some (Marked (select l))
+      | Marked l -> Some (Unmarked (pass l))
+
+    let run l =
+      let rec run = function
+        | None -> []
+        | Some s -> s::(run (step s))
+      in
+      run (Some (Init l))
+
+    let put_frame ?logo ?title l =
+      let seq = list (run l) in
+      let the_frame q =
+        center (rule_ (`Pt 0.) (`Textwidth 0.5) ^^ mlpost (pr_state q))
+      in
+      put seq (frame ?logo ?title the_frame)
 
 end
 
@@ -222,43 +298,10 @@ let doc = ([
     ]}"
   )end;
 
-  put (list[1]) begin frame ~title:"From list to trees" (fun _ ->
-    let open Mlpost in
-    (* let mlplatex = Melt.picture_of_latex in *)
-    (* let bsize = Num.cm 1. in let height = bsize and width = bsize in *)
-    (* let textsize = huge in *)
-    (* let emptyb ?fill () = *)
-    (*   Box.empty ~height ~width () *)
-    (* in *)
-    (* let numb ?fill i = *)
-    (*   let i' = textsize (mode M (latex_of_int i)) in *)
-    (*   let () = Format.printf \"%s@.\" (Latex.to_string i') in *)
-    (*   let i'' = Melt.picture_of_latex i' in *)
-    (*   (\* Box.tex ~stroke:(Some Color.black) (\\* ~height ~width *\\) i' *\) *)
-    (*   Box.pic i'' *)
-    (* in *)
-    (* let normalize l = *)
-    (*   Box.same_height (Box.same_width l) |> *)
-    (*   List.map (fun b -> Box.rect ~dx:0. ~dy:0. b) *)
-    (* in *)
-    mlpost begin
-      (* [emptyb();emptyb(); numb 1; numb 2 ] |> *)
-      (* normalize |> *)
-      (* Box.hbox |> *)
-      (* Box.draw (Algo.pr_int_list [1;2;3;4;5;6;7]) *)
-      let next p = Point.shift p Point.(mult (Num.cm 1.) right) in
-      let rec gen n =
-        if n <= 0 then []
-        else Point.origin :: (List.map next (gen (n-1)))
-      in
-      let s n = Node(Leaf,n,Leaf) in
-      let t1 = Node (s 1 , 2 , Node (s 3,4,s 5)) in
-      let t2 = Node (s 1 , 2 , s 3) in
-      (* Algo.pr_int_tree (gen 7) t1 *)
-      (* Algo.pr_int_tree (gen 3) t2 *)
-      Algo.pr_alt_list [Tree t1;Pivot 6; Tree t2]
-    end
-  )end;
+  Algo.put_frame ~title:"From list to trees" [1;2;3;4;5;6;7;8;9;10;11;12;13;14;15];
+
+  Algo.put_frame  ~title:"Fill up to {exponent$2$$n-1$}" [1;2;3;4;5;6;7;8;9;10;11];
+
 ])
 
 
