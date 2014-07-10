@@ -23,6 +23,9 @@ let keywords = [
   "with" ;
   "end";
 
+  "let";
+  "in";
+
   "Module";
   "Section";
   "Variable";

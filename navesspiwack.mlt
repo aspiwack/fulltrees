@@ -19,6 +19,8 @@ let packages = [
   "inputenc" , "utf8" ;
 ]
 
+let array_line = array_line ~sep:(`Mm 1.)
+
 (** printing the intermediate structures of the algorithm with mlpost *)
 
 type 'a tree =
@@ -45,11 +47,14 @@ module Algo = struct
   (** basic boxes *)
   let emptyb ?fill () =
     Box.empty ?fill ~height ~width ()
-  let numb ?fill i =
-    let i' = textsize (mode M (latex_of_int i)) in
-    let () = Format.printf \"%s@.\" (Latex.to_string i') in
-    let i'' = Melt.picture_of_latex i' in
-    Box.pic ?fill i''
+
+  let texbox ?fill x =
+    let x' = textsize x in
+    let () = Format.printf \"%s@.\" (Latex.to_string x') in
+    let x'' = Melt.picture_of_latex x' in
+    Box.pic ?fill x''
+
+  let numb ?fill i = texbox ?fill (mode M (latex_of_int i))
 
   (** Make all boxes the same size then draw their borders. *)
   let normalize l =
@@ -110,7 +115,7 @@ module Algo = struct
     in
     assign_base_depth ps (base_size t) 0 t
 
-  let pr_int_tree ps t =
+  let pr_tree pr_elt ps t =
     let at = assign_base_depth ps t in
     let h = tree_height t in
     let pos_of_bd p d =
@@ -119,7 +124,7 @@ module Algo = struct
     in
     let placed_t =
       tree_map begin fun (p,d,x) ->
-        numb x |>
+        texbox (pr_elt x) |>
         Box.center (pos_of_bd p d)
       end at
     in
@@ -151,7 +156,7 @@ module Algo = struct
     in
     Command.(draw_boxes placed_t ++ arrows)
 
-  let pr_alt_list l =
+  let pr_alt_list_gen pr_pivot l =
     let rec genempty n =
       if n = 0 then []
       else (emptyb ~fill:treebase_color ()) :: genempty (n-1)
@@ -163,7 +168,7 @@ module Algo = struct
           if b then Some Color.lightblue
           else None
         in
-        numb ?fill i ::r , q
+        texbox ?fill (pr_pivot i) ::r , q
       | Tree t :: l ->
         let tq = genempty(base_size t) in
         let (r,q) = gen_base l in
@@ -182,12 +187,15 @@ module Algo = struct
             Box.ctr (Box.sub b base)
           end q
         in
-        pr_int_tree ps t
+        pr_tree pr_pivot ps t
       end queue
     in
     let open Command in
-    Box.draw base ++
-    seq trees
+    Box.group [base;Box.pic(Picture.make(seq trees))]
+    (* Box.draw base ++ *)
+    (* seq trees *)
+
+    let pr_alt_list l = Box.draw (pr_alt_list_gen (fun i -> (mode M (latex_of_int i))) l)
 
     (** The actual algorithm, in an incremental fashion *)
 
@@ -245,7 +253,7 @@ module Algo = struct
     let put_frame ?logo ?title l =
       let seq = list (run l) in
       let the_frame q =
-        center (rule_ (`Pt 0.) (`Textwidth 0.5) ^^ mlpost (pr_state q))
+        center (rule_ (`Pt 0.) (`Textheight 0.35) ^^ mlpost (pr_state q))
       in
       put seq (frame ?logo ?title the_frame)
 
@@ -302,6 +310,218 @@ let doc = ([
 
   Algo.put_frame  ~title:"Fill up to {exponent$2$$n-1$}" [1;2;3;4;5;6;7;8;9;10;11];
 
+  put (list[1;2;3]) begin frame ~title:"Restricting to length {exponent$2$$n-1$}" (fun p ->
+    let c x =
+      x |>
+      apply (color black) ~at:(p=1) |>
+      apply (color blue) ~at:(p=2) |>
+      apply (color white) ~at:(p>2)
+    in
+    let def =
+      only ~at:(p<=2) "<@Inductive BList (A:Type) : Type :=@>" ^^
+      only ~at:(p>2) "<@Inductive PowerList (A:Type) : Type :=@>"
+    in
+    "{array [`L;`Vert;`L;`L] [
+      array_line ~layout:[3,`L] [def];
+      array_line ["";"<@zero@>";""];
+      array_line ["";c "<@twice@>";c "<@(l:BList (A@"*"@A))@>"];
+      array_line ["";"<@tpo@>";"<@(a:A) (l:BList (A*A)).@>"];
+    ]}"
+  )end;
+
+  put (list[1]) begin frame ~title:"Non-uniform recursion" (fun _ ->
+    "{array [`L;`Vert;`L;`L] [
+      array_line ~layout:[3,`L] ["<@Inductive PowerList (A:Type) : Type :=@>"];
+      array_line ["";"<@zero@>";""];
+      array_line ["";"<@tpo@>";"<@(a:A) (l:PowerList (A*A)).@>"];
+    ]}
+    {newline_size (`Mm 10.)}
+    {array [`L;`L;`Vert;`L;`Sep (quad^^rightarrow_^^quad); `L] [
+     array_line ~layout:[4,`L] ["<@Fixpoint map {A B} (f:A->B) (l:PowerList A) : PowerList B :=@>"];
+      array_line ~layout:[(1,`L);(3,`L)] ["";"<@match l with@>"];
+      array_line ["";"";"<@zero@>"; "<@zero@>"];
+      array_line ["";"";"<@tpo a l'@>"; "<@tpo (f a) (map (f×f) l')@>"];
+      array_line ~layout:[(1,`L);(3,`L)] ["";"<@end.@>"]
+     ]}"
+  )end;
+
+  put (list[1]) begin frame ~title:"Alternation" (fun _ ->
+    "<@Definition AlternatingPowerList (A B:Type) := A*PowerList (B*A)@>"
+  )end;
+
+  put (list[`Unmarked;`Marked;`Chunked]) begin frame ~title:"Four by four" (fun p ->
+    let n = 15 in
+    let leaf = Tree Leaf1 in
+    let emptyp x = Pivot(x,empty) in
+    let three_chunk mark = [leaf;emptyp mark;leaf] in
+    let four_chunk mark = [emptyp false;leaf;emptyp mark;leaf] in
+    let rec four_chunks n mark =
+      if n<= 0 then []
+      else four_chunk mark :: four_chunks (n-1) mark
+    in
+    let chunks n mark =
+      three_chunk mark :: four_chunks ((n-3)/4) mark
+    in
+    let unmarked = Algo.pr_alt_list_gen (fun x -> x) (List.concat (chunks n false)) in
+    let marked = Algo.pr_alt_list_gen (fun x -> x) (List.concat (chunks n true)) in
+    let picify b = b |> Box.draw |> Picture.make |> Box.pic in
+    let split =
+      List.map (fun b-> Algo.pr_alt_list_gen (fun x -> x) b |> picify) (chunks n true) |>
+      Box.hbox ~padding:(Num.cm 0.3)
+    in
+    center (mlpost begin
+      match p with
+      | `Unmarked -> Box.draw unmarked
+      | `Marked -> Box.draw marked
+      | `Chunked -> Box.draw split
+      (* List.map picify [unmarked;marked;split] |> *)
+      (* Box.vbox ~padding:(Num.cm 1.5) |> *)
+      (* Box.draw *)
+    end )
+  )end;
+
+  put (list[1]) begin frame ~title:"Main loop" (fun _ ->
+    let hsp = `Mm 10. in
+    "{array [`L;`L;`Vert;`L;`Sep (quad^^rightarrow_^^quad); `L] [
+      array_line ~layout:[4,`L] ["<@Definition pass l :=@>"];
+      array_line ~layout:[(1,`L);(3,`L)] ["";"<@match l with@>"];
+      array_line ["";"";"<@(a,zero)@>";"<@(a,zero)@>"];
+      array_line ["";"";"<@(a,tpo (x,b) q)@>";"<@(node a x b,map join q)@>"];
+    ]}
+    {newline_size hsp}
+    {quad}{color blue "<@q : ((A*Tree A)*(A*Tree A)) PowerList@>"}
+    (* {newline_size hsp} *)
+    (* <@Definition join xayb := let '((x,a),(y,b)) := xayb in (x , node a y b)@> *)
+    {newline_size (`Mm (-3.)) }
+    { let vx = "<@x@>" and vy = "<@y@>" in
+      let va = "<@a@>" and vb = "<@b@>" in
+      let thelist x = [
+        Pivot(false,vx);
+        Tree (Node (Leaf,va,Leaf));
+        Pivot (x,vy);
+        Tree (Node (Leaf,vb,Leaf));
+      ] in
+      let mkbox x =Algo.pr_alt_list_gen (fun x -> x) (thelist x) in
+      let thelist' = [
+        Pivot(false,vx);
+        Tree begin
+          Node (
+            Node(Leaf,va,Leaf),
+            vy,
+            Node(Leaf,vb,Leaf)
+          )
+        end
+      ] in
+      let box' = Algo.pr_alt_list_gen (fun x -> x) thelist' in
+      let rwest b = Box.(west (nth 0 b)) in
+      let reast b = Box.(east (nth 0 b)) in
+      center (mlpost begin
+        let left = mkbox false in
+        let right = mkbox true in
+        let both = Box.hbox ~padding:(Num.cm 1.) ~pos:`Bottom [left;right;box'] in
+        let left = Box.sub left both in
+        let right = Box.sub right both in
+        let box' = Box.sub box' both in
+        let arrow1 = Arrow.point_to_point (reast left) (rwest right) in
+        let arrow2 =
+          Arrow.point_to_point ~tex:(Latex.to_string"<@join@>") ~anchor:`Top
+            (reast right) (rwest box')
+        in
+        Command.( Box.draw both ++ arrow1 ++ arrow2 )
+      end)}
+    "
+  )end;
+
+  put (list[1]) begin frame ~title:"Full trees" (fun _ ->
+    let thin = text\"\\\\,\" in
+    "{array [`L;`Vert;`L;`Sep(${thin}:{thin}$);`L] [
+      array_line ~layout:[3,`L] ["<@Inductive FullTree (A:Type) : nat -> Type :=@>"];
+      array_line ["";"<@Leaf₀@>";"<@FullTree A 0@>"];
+      array_line ["";"<@Leaf₁@>";"<@FullTree A 1@>"];
+      array_line ["";"<@Node {k:nat}@>";"<@FullTree A k -> A -> FullTree A k -> FullTree A (S k)@>"];
+    ]}"
+  )end;
+
+  put (list[1]) begin frame ~title:"But how do I make a power list?" (fun _ ->
+    array [`L;`L] [
+      array_line ["";"<@a::l : List A@>"];
+      array_line [leadsto;"<@tpo a (?:PowerList (A*A))@>"];
+      array_line [leadsto;"<@l':list (A*A)@> {longrightarrow_} elements of <@l@> grouped by two (with default if odd)"];
+      array_line [leadsto;"<@x::l'' = l'@>"];
+      array_line [leadsto;"<@tpo a (tpo x (?:PowerList ((A*A)*(A*A))))@>"];
+      array_line ["";qquad^^command\"vdots\" [] A];
+      array_line [leadsto;"<@: PowerList A@>"];
+    ]
+  )end;
+
+  put (list[1]) begin frame ~title:"Learning how to count" (fun _ ->
+    let decorate n = exponent (overline n) $2'$ in
+    let b2 x =
+      let put d n = n^^d in
+      let rec b2 = function
+      | 0                        -> empty
+      | n when n mod 2 == 1      -> put $1$ (b2 ((n-1)/2))
+      | n (*when n mod 2 == 0 *) -> put $2$ (b2 ((n-2)/2))
+      in
+      if x == 0 then decorate (phantom$0$ ^^ hspace (`Ex (-1.)) ^^cdot)
+      else decorate (b2 x)
+    in
+    let line x =
+      array_line [ b2 x ; $=$ ; ${latex_of_int x}$ ]
+    in
+    let rec lines n m =
+      if n > m then []
+      else line n :: lines (n+1) m
+    in
+    let examples n m =
+      just_left `Brace (array [`R;`C;`L] (lines n m))
+    in
+    "Unique representation: base $2$, digits $\{1;2\}$
+     {newline_size (`Mm 7.)}
+     {qquad}{(examples 0 7)}"
+  )end;
+
+  put (list[1]) begin frame ~title:"Arithmetic" (fun _ ->
+    let (mult2t,mult2) =
+    "Eliminate the $0$ (multiply by $2$):",
+     just_left `Brace (array [`L;`L;`L] [
+       array_line [$0$ ; leadsto ; cdot];
+       array_line [$x10$ ; leadsto ; $x02$];
+       array_line [$x20$ ; leadsto ; $x12$];
+      ])
+     in
+     let (succt,succ,succs1,succs2) =
+     "Successor:",
+     just_left `Brace (array [`L;`L;`L] [
+       array_line [$s~{cdot}$ ; leadsto ; $1$];
+       array_line [$s(x1)$ ; leadsto ; $x2$];
+       array_line [$s(x2)$ ; leadsto ; $(s x)1$];
+      ]),
+     "Convert from Peano integer:", "amortised $O(n)$"
+     in
+     array [`L;`Sep(hspace(`Mm 12.));`L] [
+       array_line [succt;mult2t];
+       array_line [succ;mult2];
+       array_line [succs1;empty];
+       array_line [succs2;empty];
+     ]
+  )end;
+
+  put (list[1]) begin frame ~title:"Yet another binary list datatype" (fun _ ->
+    "{array [`L;`Vert;`L;`L] [
+      array_line ~layout:[3,`L] ["<@Inductive BList' (A:Type) : Type :=@>"];
+      array_line ["";"<@zero@>";""];
+      array_line ["";"<@tpo@>";"<@(a:A) (l:BList (A*A)).@>"];
+      array_line ["";"<@tpt@>";"<@(a b:A) (l:BList (A*A))@>"];
+    ]}
+    {newline_size (`Mm 15.)}
+    With a bit of extra work: complete to a powerlist and complete the algorithm"
+  )end;
+
+  title_put (list [1]) begin title_frame (fun _ ->
+    textbf (huge2 "Are you full yet?") ^^ newline_size (`Mm 6.)
+    ^^ large3"(Be reassured: I'm done)"
+  )end;
 ])
 
 
