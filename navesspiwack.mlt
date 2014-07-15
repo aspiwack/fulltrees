@@ -21,6 +21,7 @@ let packages = [
 
 let array_line = array_line ~sep:(`Mm 1.)
 
+
 (** printing the intermediate structures of the algorithm with mlpost *)
 
 type 'a tree =
@@ -287,7 +288,7 @@ let doc = ([
   put (list[1]) begin frame ~title:"Lists as fast exponentiation" (fun _ ->
     "List of size $n$: still type exponentiation $A^n$
      {displaymath (just_left `Brace (array [`L;`L;`L] [
-       array_line [$A^0$;$=$;$A$];
+       array_line [$A^0$;$=$;$1$];
        array_line [exponent$A$ $2n$;$=$;$(A{times}A)^n$];
        array_line [exponent$A$ $2n+1$;$=$;$A{times}(A{times}A)^n$];
      ]))}{newline_size(`Mm 4.)}
@@ -303,14 +304,21 @@ let doc = ([
       array_line ["";"<@zero@>";""];
       array_line ["";"<@twice@>";"<@(l:BList (A*A))@>"];
       array_line ["";"<@tpo@>";"<@(a:A) (l:BList (A*A)).@>"];
-    ]}"
+    ]}{newline_size(`Mm 10.)}
+
+     Example ($11 = {overline$1101$}^2$):
+     {let thin = text\"\\\\,\" in
+       displaymath (array [`C] [
+         array_line [$[1;(2,3);{thin^^cdot^^thin};(((4,5),(6,7)),((8,9),(10,11)))]$];
+         array_line ["<@tpo 1 (tpo (2,3) (twice (tpo (((4,5),(6,7)),((8,9),(10,11))) zero)))@>"];
+       ])}"
   )end;
 
   Algo.put_frame ~title:"From list to trees" [1;2;3;4;5;6;7;8;9;10;11;12;13;14;15];
 
-  Algo.put_frame  ~title:"Fill up to {exponent$2$$n-1$}" [1;2;3;4;5;6;7;8;9;10;11];
+  Algo.put_frame  ~title:"Fill up to $2^n-1$" [1;2;3;4;5;6;7;8;9;10;11];
 
-  put (list[1;2;3]) begin frame ~title:"Restricting to length {exponent$2$$n-1$}" (fun p ->
+  put (list[1;2;3;4]) begin frame ~title:"Restricting to length $2^n-1$" (fun p ->
     let c x =
       x |>
       apply (color black) ~at:(p=1) |>
@@ -326,7 +334,15 @@ let doc = ([
       array_line ["";"<@zero@>";""];
       array_line ["";c "<@twice@>";c "<@(l:BList (A@"*"@A))@>"];
       array_line ["";"<@tpo@>";"<@(a:A) (l:BList (A*A)).@>"];
-    ]}"
+    ]}
+    {newline_size (`Mm 10.)}
+
+    {apply (color white) ~at:(p<=3) "
+      Example:
+      {displaymath (array [`C] [
+        array_line [$[ 1 ; (2,3) ; ((4,5),(6,7)) ]$];
+        array_line ["<@tpo 1 (tpo (2,3) (tpo ((4,5),(6,7)) zero ))@>"];
+      ])}"}"
   )end;
 
   put (list[1]) begin frame ~title:"Non-uniform recursion" (fun _ ->
@@ -337,10 +353,14 @@ let doc = ([
     ]}
     {newline_size (`Mm 10.)}
     {array [`L;`L;`Vert;`L;`Sep (quad^^rightarrow_^^quad); `L] [
-     array_line ~layout:[4,`L] ["<@Fixpoint map {A B} (f:A->B) (l:PowerList A) : PowerList B :=@>"];
+      (let a = color blue "<@A@>" in
+       let b = color blue "<@B@>" in
+       array_line ~layout:[4,`L] ["<@Fixpoint map @{a}@ @{b}@ (f:A->B) (l:PowerList A) : PowerList B :=@>"]);
       array_line ~layout:[(1,`L);(3,`L)] ["";"<@match l with@>"];
       array_line ["";"";"<@zero@>"; "<@zero@>"];
-      array_line ["";"";"<@tpo a l'@>"; "<@tpo (f a) (map (f×f) l')@>"];
+      (let aa = color blue "<@(A*A)@>" in
+       let bb = color blue "<@(B*B)@>" in
+       array_line ["";"";"<@tpo a l'@>"; "<@tpo (f a) (map @{aa}@ @{bb}@ (f×f) l')@>"]);
       array_line ~layout:[(1,`L);(3,`L)] ["";"<@end.@>"]
      ]}"
   )end;
@@ -519,8 +539,8 @@ let doc = ([
   )end;
 
   title_put (list [1]) begin title_frame (fun _ ->
-    textbf (huge2 "Are you full yet?") ^^ newline_size (`Mm 6.)
-    ^^ large3"(Be reassured: I'm done)"
+    textbf (huge2 "There. I'm full!") (* ^^ newline_size (`Mm 6.) *)
+    (* ^^ large3"(Be reassured: I'm done)" *)
   )end;
 ])
 
