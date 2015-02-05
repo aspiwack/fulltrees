@@ -140,7 +140,7 @@ Module AlternatingPowerList.
     let '⟨k,l⟩ := l in
     ⟨ S k , (a,l) ⟩.
 
-  (** Lifts [PowerList.of_binary_list] two [T]. *)
+  (** Lifts [PowerList.of_binary_list] to [T]. *)
   Definition of_binary_list {A Odd Even} (d:Odd) (f:A->Odd) (g:A->Even) (l:BL.T A) : U Odd Even :=
     match l with
     | BL.zero => zero
