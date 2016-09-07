@@ -1,0 +1,2 @@
+# `sh opam.pin` to pin the appropriate packages for this repo
+opam pin add mlpost https://github.com/backtracking/mlpost.git#c03f86bb43682099b71863ea3a0d844ebc339bc8
