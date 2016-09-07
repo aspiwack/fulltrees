@@ -20,8 +20,10 @@ let join left node right = Tree (Node (left, node, right))
     of the form [Tree t], where [t] is full and has height [h+1], and [Elt
     x]. *)
 let rec pass = function
-  | Tree left :: Elt root :: Tree right :: Elt e :: others -> join left root right :: Elt e :: pass others
-  | [Tree left; Elt root; Tree right] -> [join left root right]
+  | Tree left :: Elt root :: Tree right :: Elt e :: others ->
+      join left root right :: Elt e :: pass others
+  | [Tree left; Elt root; Tree right] ->
+      [join left root right]
   | _ -> assert false
 
 (** The main loop of the algorithm iterates [pass] until it contains a
@@ -31,19 +33,31 @@ let rec loop = function
   | [Tree t] -> t
   | list -> loop (pass list)
 
+(** The next two functions are used to compute the power of 2, that is
+    closest and superior to [n] *)
+let rec repeat ~until:predicate ~f value =
+  if predicate value then value
+  else repeat ~until:predicate ~f (f value)
+
+let closest_power n =
+  repeat ~until:((<) n) ~f:(( * ) 2) 1 
+
 (** A list of arbitrary length [n] is completed to length [2^k-1 >= n
     > 2^(k-1)-1] by inserting the appropriate number of leaves. The
     appropriate [2^k-1] is computed, and the appropriate number of [Leaf]
     are inserted in the first odd positions. *)
 let complete list =
   let n = List.length list in
-  let rec pow2 i = if i <= n then pow2 (2*i) else i in 
-  let missing = (pow2 1) - n - 1 in
+  let missing = closest_power n - n - 1 in
   let rec pad missing = function
-    | head::tail when missing <> 0 -> Tree Leaf :: Elt head :: pad (missing - 1) tail
-    | odd::even::others -> join Leaf odd Leaf :: Elt even :: pad 0 others
-    | [single] -> [join Leaf single Leaf]
-    | [] -> []
+    | head::tail when missing <> 0 ->
+        Tree Leaf :: Elt head :: pad (missing - 1) tail
+    | odd::even::others ->
+        join Leaf odd Leaf :: Elt even :: pad 0 others
+    | [single] ->
+        [join Leaf single Leaf]
+    | [] ->
+        []
   in
   pad missing list
 
